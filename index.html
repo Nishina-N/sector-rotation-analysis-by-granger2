@@ -903,17 +903,17 @@ renderCommonTable('common-m-tbody', COMMON_DATA.m_links,'ヶ月');
 </script>
 
 
-<!-- ⑧ RRS∩BP + Triple Intersection -->
+<!-- ⑧ RRS∩BP Common Pairs -->
 <div class="section">
   <div class="section-header">
-    <h2>⑧ RRS と BP 両方で有意なペア、および全3指標共通（最高信頼）</h2>
+    <h2>⑧ RRS∩BP：相対相対強度×買い圧力 共通グレンジャー因果</h2>
     <div class="desc">
-      RRS（β除去後の相対強度）と BP（買い圧力）の共通ペアを抽出し、さらに RS・RRS・BP 全3指標で有意なペアを「最高信頼シグナル」として特定する。
+      RRS（β除去後の相対強度）と BP（買い圧力）の両方で有意な因果関係（≥5年）が確認されたペアを抽出。2指標が異なるメカニズムから同一の因果方向性を支持するケースを特定する。
     </div>
   </div>
   <div class="section-body">
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
       <div style="background:#f3e5f5;border-left:4px solid #6a1b9a;border-radius:7px;padding:14px">
         <div style="font-weight:700;color:#4a148c;margin-bottom:6px">📊 週次 RRS∩BP（≥5年）</div>
         <div style="font-size:28px;font-weight:800;color:#6a1b9a">13ペア</div>
@@ -924,15 +924,9 @@ renderCommonTable('common-m-tbody', COMMON_DATA.m_links,'ヶ月');
         <div style="font-size:28px;font-weight:800;color:#880e4f">5ペア</div>
         <div style="font-size:12px;color:#455a64;margin-top:4px">全34(RRS) ∩ 25(BP) から絞り込み<br>うちラグ一致: <strong>0ペア</strong></div>
       </div>
-      <div style="background:#fff8e1;border-left:4px solid #f57f17;border-radius:7px;padding:14px">
-        <div style="font-weight:700;color:#e65100;margin-bottom:6px">⭐ 全3指標共通（RS∩RRS∩BP）</div>
-        <div style="font-size:28px;font-weight:800;color:#f57f17">週次5 / 月次1</div>
-        <div style="font-size:12px;color:#455a64;margin-top:4px">110ペア中の最高信頼シグナル<br>3指標すべてで5年以上有意</div>
-      </div>
     </div>
 
     <!-- RRS∩BP Tabs -->
-    <h3 style="font-size:14px;font-weight:700;color:#455a64;margin-bottom:10px">RRS ∩ BP 共通ペア</h3>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchRBTab('w',this)">📅 週次（13ペア）</button>
       <button class="tab-btn" onclick="switchRBTab('m',this)">📆 月次（5ペア）</button>
@@ -1013,72 +1007,7 @@ renderCommonTable('common-m-tbody', COMMON_DATA.m_links,'ヶ月');
       </table>
     </div>
 
-    <hr class="dv" style="margin:28px 0">
-
-    <!-- ⭐ Triple Intersection -->
-    <h3 style="font-size:15px;font-weight:800;color:#e65100;margin-bottom:12px">
-      ⭐ 最高信頼シグナル — RS・RRS・BP 全3指標共通ペア
-    </h3>
-    <p style="font-size:13px;color:#455a64;margin-bottom:16px;line-height:1.7">
-      価格（RS）・β除去強度（RRS）・買い圧力（BP）の3つの異なる視点すべてで5年以上継続して有意と判定された、
-      最も構造的に安定した因果関係。週次5ペア・月次1ペアのみ。
-    </p>
-
-    <!-- Triple Weekly Network -->
-    <div style="background:#fff8e1;border-radius:8px;padding:20px;margin-bottom:20px">
-      <h4 style="font-size:13px;font-weight:700;color:#e65100;margin-bottom:12px">週次 全3指標共通（5ペア）</h4>
-      <div class="net-wrap">
-        <svg id="triple-w-net" width="540" height="500"></svg>
-        <div class="legend-box">
-          <h4>ラグ番号の見方</h4>
-          <div style="font-size:11px;color:#455a64;line-height:2">
-            <span style="background:#1565c0;color:#fff;border-radius:3px;padding:2px 6px;font-size:10px">RS</span> 上<br>
-            <span style="background:#6a1b9a;color:#fff;border-radius:3px;padding:2px 6px;font-size:10px">RRS</span> 中<br>
-            <span style="background:#2e7d32;color:#fff;border-radius:3px;padding:2px 6px;font-size:10px">BP</span> 下
-          </div>
-          <hr class="dv" style="margin:10px 0">
-          <p style="font-size:11px;color:#455a64;line-height:1.6">矢印の色はF値平均。矢印の太さは最小出現年数。</p>
-          <div class="edge-box" id="triple-w-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルで詳細</div></div>
-        </div>
-      </div>
-      <hr class="dv">
-      <table class="pt">
-        <thead><tr>
-          <th>#</th><th>先行セクター</th><th>遅行セクター</th>
-          <th style="background:#1565c0">RS 出現年/ラグ</th>
-          <th style="background:#6a1b9a">RRS 出現年/ラグ</th>
-          <th style="background:#2e7d32">BP 出現年/ラグ</th>
-        </tr></thead>
-        <tbody id="triple-w-tbody"></tbody>
-      </table>
-    </div>
-
-    <!-- Triple Monthly -->
-    <div style="background:#e8f5e9;border-radius:8px;padding:20px">
-      <h4 style="font-size:13px;font-weight:700;color:#1b5e20;margin-bottom:12px">月次 全3指標共通（1ペア）</h4>
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-        <div style="font-size:40px">💎</div>
-        <div>
-          <div style="font-size:18px;font-weight:800;color:#1a237e">Healthcare → Communication Services</div>
-          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
-            <span style="background:#1565c0;color:#fff;border-radius:6px;padding:4px 12px;font-size:13px;font-weight:700">RS: 10年有意 / lag 1ヶ月</span>
-            <span style="background:#6a1b9a;color:#fff;border-radius:6px;padding:4px 12px;font-size:13px;font-weight:700">RRS: 6年有意 / lag 1ヶ月</span>
-            <span style="background:#2e7d32;color:#fff;border-radius:6px;padding:4px 12px;font-size:13px;font-weight:700">BP: 5年有意 / lag 7ヶ月</span>
-          </div>
-          <div style="font-size:12px;color:#455a64;margin-top:10px;line-height:1.7">
-            RS・RRSは <strong>1ヶ月先行</strong>、BPは <strong>7ヶ月先行</strong> で有意。
-            RSとRRSのラグが一致（1ヶ月）しており、Healthcare の強さが約1ヶ月後に
-            Communication Services に波及するパターンが最も信頼性の高い月次シグナル。
-            BPの7ヶ月は長期的な資金フローの先行性を示す可能性がある。
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
+    <script>
 (function(){
 const RB = {"w_links": [{"source": "Healthcare", "target": "Communication Services", "years": 7, "fmax": 7.74, "rrs_lag": 1, "bp_lag": 2, "lag_same": false, "rrs_years": 9, "bp_years": 7, "rrs_fmax": 11.2, "bp_fmax": 4.29}, {"source": "Financial Services", "target": "Consumer Cyclical", "years": 6, "fmax": 6.78, "rrs_lag": 1, "bp_lag": 5, "lag_same": false, "rrs_years": 7, "bp_years": 6, "rrs_fmax": 9.5, "bp_fmax": 4.07}, {"source": "Industrials", "target": "Utilities", "years": 6, "fmax": 7.83, "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "rrs_years": 6, "bp_years": 11, "rrs_fmax": 4.06, "bp_fmax": 11.6}, {"source": "Utilities", "target": "Financial Services", "years": 6, "fmax": 9.61, "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "rrs_years": 6, "bp_years": 6, "rrs_fmax": 5.34, "bp_fmax": 13.88}, {"source": "Basic Materials", "target": "Technology", "years": 6, "fmax": 4.05, "rrs_lag": 3, "bp_lag": 7, "lag_same": false, "rrs_years": 6, "bp_years": 9, "rrs_fmax": 4.61, "bp_fmax": 3.5}, {"source": "Healthcare", "target": "Industrials", "years": 6, "fmax": 8.45, "rrs_lag": 1, "bp_lag": 1, "lag_same": true, "rrs_years": 8, "bp_years": 6, "rrs_fmax": 11.52, "bp_fmax": 5.38}, {"source": "Financial Services", "target": "Communication Services", "years": 5, "fmax": 9.55, "rrs_lag": 1, "bp_lag": 1, "lag_same": true, "rrs_years": 5, "bp_years": 5, "rrs_fmax": 11.55, "bp_fmax": 7.55}, {"source": "Financial Services", "target": "Technology", "years": 5, "fmax": 4.24, "rrs_lag": 6, "bp_lag": 2, "lag_same": false, "rrs_years": 7, "bp_years": 5, "rrs_fmax": 4.43, "bp_fmax": 4.05}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fmax": 5.59, "rrs_lag": 6, "bp_lag": 3, "lag_same": false, "rrs_years": 5, "bp_years": 5, "rrs_fmax": 3.6, "bp_fmax": 7.58}, {"source": "Technology", "target": "Healthcare", "years": 5, "fmax": 4.89, "rrs_lag": 3, "bp_lag": 8, "lag_same": false, "rrs_years": 8, "bp_years": 5, "rrs_fmax": 6.44, "bp_fmax": 3.34}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 5, "fmax": 7.97, "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "rrs_years": 7, "bp_years": 5, "rrs_fmax": 10.39, "bp_fmax": 5.56}, {"source": "Communication Services", "target": "Basic Materials", "years": 5, "fmax": 4.73, "rrs_lag": 3, "bp_lag": 1, "lag_same": false, "rrs_years": 6, "bp_years": 5, "rrs_fmax": 4.1, "bp_fmax": 5.37}, {"source": "Financial Services", "target": "Utilities", "years": 5, "fmax": 7.97, "rrs_lag": 1, "bp_lag": 1, "lag_same": true, "rrs_years": 9, "bp_years": 5, "rrs_fmax": 7.92, "bp_fmax": 8.03}], "m_links": [{"source": "Consumer Cyclical", "target": "Basic Materials", "years": 7, "fmax": 8.24, "rrs_lag": 1, "bp_lag": 3, "lag_same": false, "rrs_years": 7, "bp_years": 9, "rrs_fmax": 6.76, "bp_fmax": 9.73}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 7, "fmax": 12.86, "rrs_lag": 4, "bp_lag": 1, "lag_same": false, "rrs_years": 7, "bp_years": 7, "rrs_fmax": 19.02, "bp_fmax": 6.69}, {"source": "Real Estate", "target": "Basic Materials", "years": 5, "fmax": 5.02, "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "rrs_years": 9, "bp_years": 5, "rrs_fmax": 4.34, "bp_fmax": 5.7}, {"source": "Energy", "target": "Communication Services", "years": 5, "fmax": 3.9, "rrs_lag": 3, "bp_lag": 5, "lag_same": false, "rrs_years": 6, "bp_years": 5, "rrs_fmax": 3.85, "bp_fmax": 3.94}, {"source": "Healthcare", "target": "Communication Services", "years": 5, "fmax": 8.43, "rrs_lag": 1, "bp_lag": 7, "lag_same": false, "rrs_years": 6, "bp_years": 5, "rrs_fmax": 9.99, "bp_fmax": 6.86}], "w_hm": [{"cause": "Healthcare", "effect": "Communication Services", "rrs_lag": 1, "bp_lag": 2, "lag_same": false, "min_years": 7}, {"cause": "Financial Services", "effect": "Consumer Cyclical", "rrs_lag": 1, "bp_lag": 5, "lag_same": false, "min_years": 6}, {"cause": "Industrials", "effect": "Utilities", "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "min_years": 6}, {"cause": "Utilities", "effect": "Financial Services", "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "min_years": 6}, {"cause": "Basic Materials", "effect": "Technology", "rrs_lag": 3, "bp_lag": 7, "lag_same": false, "min_years": 6}, {"cause": "Healthcare", "effect": "Industrials", "rrs_lag": 1, "bp_lag": 1, "lag_same": true, "min_years": 6}, {"cause": "Financial Services", "effect": "Communication Services", "rrs_lag": 1, "bp_lag": 1, "lag_same": true, "min_years": 5}, {"cause": "Financial Services", "effect": "Technology", "rrs_lag": 6, "bp_lag": 2, "lag_same": false, "min_years": 5}, {"cause": "Utilities", "effect": "Consumer Cyclical", "rrs_lag": 6, "bp_lag": 3, "lag_same": false, "min_years": 5}, {"cause": "Technology", "effect": "Healthcare", "rrs_lag": 3, "bp_lag": 8, "lag_same": false, "min_years": 5}, {"cause": "Communication Services", "effect": "Consumer Cyclical", "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "min_years": 5}, {"cause": "Communication Services", "effect": "Basic Materials", "rrs_lag": 3, "bp_lag": 1, "lag_same": false, "min_years": 5}, {"cause": "Financial Services", "effect": "Utilities", "rrs_lag": 1, "bp_lag": 1, "lag_same": true, "min_years": 5}], "m_hm": [{"cause": "Consumer Cyclical", "effect": "Basic Materials", "rrs_lag": 1, "bp_lag": 3, "lag_same": false, "min_years": 7}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "rrs_lag": 4, "bp_lag": 1, "lag_same": false, "min_years": 7}, {"cause": "Real Estate", "effect": "Basic Materials", "rrs_lag": 5, "bp_lag": 1, "lag_same": false, "min_years": 5}, {"cause": "Energy", "effect": "Communication Services", "rrs_lag": 3, "bp_lag": 5, "lag_same": false, "min_years": 5}, {"cause": "Healthcare", "effect": "Communication Services", "rrs_lag": 1, "bp_lag": 7, "lag_same": false, "min_years": 5}], "triple_w": [{"source": "Communication Services", "target": "Basic Materials", "rs_yr": 6, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 3, "bp_yr": 5, "bp_lag": 1, "min_years": 5}, {"source": "Financial Services", "target": "Utilities", "rs_yr": 5, "rs_lag": 5, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 1, "min_years": 5}, {"source": "Healthcare", "target": "Communication Services", "rs_yr": 5, "rs_lag": 3, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 7, "bp_lag": 2, "min_years": 5}, {"source": "Utilities", "target": "Consumer Cyclical", "rs_yr": 6, "rs_lag": 5, "rrs_yr": 5, "rrs_lag": 6, "bp_yr": 5, "bp_lag": 3, "min_years": 5}, {"source": "Utilities", "target": "Financial Services", "rs_yr": 8, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 5, "bp_yr": 6, "bp_lag": 1, "min_years": 6}], "triple_m": [{"source": "Healthcare", "target": "Communication Services", "rs_yr": 10, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 7, "min_years": 5}], "triple_w_table": [{"cause": "Communication Services", "effect": "Basic Materials", "rs_yr": 6, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 3, "bp_yr": 5, "bp_lag": 1}, {"cause": "Financial Services", "effect": "Utilities", "rs_yr": 5, "rs_lag": 5, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 1}, {"cause": "Healthcare", "effect": "Communication Services", "rs_yr": 5, "rs_lag": 3, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 7, "bp_lag": 2}, {"cause": "Utilities", "effect": "Consumer Cyclical", "rs_yr": 6, "rs_lag": 5, "rrs_yr": 5, "rrs_lag": 6, "bp_yr": 5, "bp_lag": 3}, {"cause": "Utilities", "effect": "Financial Services", "rs_yr": 8, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 5, "bp_yr": 6, "bp_lag": 1}], "triple_m_table": [{"cause": "Healthcare", "effect": "Communication Services", "rs_yr": 10, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 7}]};
 const SECTORS = window.DATA ? window.DATA.sectors : ["Basic Materials", "Communication Services", "Consumer Cyclical", "Consumer Defensive", "Energy", "Financial Services", "Healthcare", "Industrials", "Real Estate", "Technology", "Utilities"];
@@ -1226,85 +1155,469 @@ function drawRBTable(tbodyId,links,lagUnit){
   document.getElementById(tbodyId).innerHTML=h;
 }
 
-// Triple network (3 labels per edge)
-function drawTripleNet(){
-  const links=RB.triple_w, svgId='triple-w-net', infoId='triple-w-info';
-  const svg=d3.select("#"+svgId); svg.selectAll("*").remove();
-  svg.attr("width",540).attr("height",500);
-  const pos=nodePos(SECTORS,260,245,195);
-  const colors=["#90a4ae","#f39c12","#e74c3c","#f57f17"];
-  drawArrows(svg,svgId,colors);
+})();
+</script>
 
-  links.forEach(l=>{
-    const s=pos[l.source],t=pos[l.target]; if(!s||!t)return;
-    const dx=t.x-s.x,dy=t.y-s.y,dist=Math.sqrt(dx*dx+dy*dy);
-    const nx=-dy/dist,ny=dx/dist;
-    const mx=(s.x+t.x)/2+nx*38,my=(s.y+t.y)/2+ny*38;
-    const avgF=(l.rs_yr+l.rrs_yr+l.bp_yr)/3;
-    const col=avgF>=8?"#e74c3c":avgF>=5?"#f39c12":"#90a4ae";
-    const ai=avgF>=8?2:avgF>=5?1:0;
-    const ex=t.x-(t.x-mx)/Math.sqrt((t.x-mx)**2+(t.y-my)**2)*25;
-    const ey=t.y-(t.y-my)/Math.sqrt((t.x-mx)**2+(t.y-my)**2)*25;
-    const lx=(s.x+2*mx+ex)/4,ly=(s.y+2*my+ey)/4;
 
-    const g=svg.append("g").style("cursor","pointer");
-    g.append("path").attr("d",`M${s.x},${s.y} Q${mx},${my} ${ex},${ey}`)
-      .attr("fill","none").attr("stroke","#f57f17").attr("stroke-width",Math.max(1.5,l.min_years/2.5))
-      .attr("opacity",.8).attr("marker-end",`url(#${svgId}-a2)`);
+<!-- ===== SECTION 9: RS∩RRS COMMON PAIRS ===== -->
+<div class="section" id="sec-rs-rrs" style="margin-top:60px">
+  <h2 style="font-size:1.8rem;color:#1a1a2e;border-left:5px solid #8b5cf6;padding-left:16px;margin-bottom:8px">
+    ⑨ RS∩RRS：相対強度×相対相対強度 共通グレンジャー因果
+  </h2>
+  <p style="color:#555;margin-bottom:24px">
+    RS（相対強度パーセンタイル）と RRS（相対相対強度パーセンタイル）の両方で
+    有意な因果関係（≥5年）が確認されたペア。2つの指標が互いに補完的な視点を持ちながらも
+    同一の因果方向性を支持する場合を抽出。
+  </p>
 
-    // 3-row label box
-    const bw=20,bh=9;
-    [["#1565c0",l.rs_lag,-12],["#6a1b9a",l.rrs_lag,0],["#2e7d32",l.bp_lag,12]].forEach(([bg,lag,dy])=>{
-      g.append("rect").attr("x",lx-bw/2).attr("y",ly+dy-bh/2).attr("width",bw).attr("height",bh).attr("fill",bg).attr("rx",2).attr("opacity",.92);
-      g.append("text").attr("x",lx).attr("y",ly+dy+3.5).attr("text-anchor","middle")
-        .attr("font-size",7).attr("font-weight","700").attr("fill","#fff").text(lag+"w");
+  <!-- Tab buttons -->
+  <div style="display:flex;gap:8px;margin-bottom:20px">
+    <button id="rrBtn_weekly" onclick="switchRRTab('weekly',this)"
+      style="padding:10px 28px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.95rem;background:#8b5cf6;color:#fff">
+      週次（10ペア）
+    </button>
+    <button id="rrBtn_monthly" onclick="switchRRTab('monthly',this)"
+      style="padding:10px 28px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.95rem;background:#e2d9f3;color:#555">
+      月次（4ペア）
+    </button>
+  </div>
+
+  <!-- Weekly pane -->
+  <div id="rrPane_weekly">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+      <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <h3 style="font-size:1rem;color:#8b5cf6;margin:0 0 8px">因果ネットワーク（週次）</h3>
+        <svg id="rrNet_weekly" width="420" height="420"></svg>
+        <p style="font-size:0.75rem;color:#888;margin:6px 0 0">矢印色：濃紫=高F値 ｜ ラベル：上=RS lag 下=RRS lag ｜ ⊙=ラグ一致</p>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <h3 style="font-size:1rem;color:#8b5cf6;margin:0 0 8px">ラグ比較ヒートマップ（週次）</h3>
+        <div id="rrHm_weekly" style="overflow-x:auto"></div>
+        <p style="font-size:0.75rem;color:#888;margin:6px 0 0">緑=RS・RRSラグ一致 ｜ 橙=ラグ相違 ｜ 上段=RSラグ 下段=RRSラグ</p>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+      <h3 style="font-size:1rem;color:#8b5cf6;margin:0 0 12px">RS∩RRS 週次ペア詳細</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+        <thead><tr style="background:#f3e8ff">
+          <th style="padding:8px;text-align:left;border-bottom:2px solid #8b5cf6">Cause</th>
+          <th style="padding:8px;text-align:left;border-bottom:2px solid #8b5cf6">Effect</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RS Lag</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RS 有意年</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RRS Lag</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RRS 有意年</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">ラグ一致</th>
+        </tr></thead>
+        <tbody id="rrTbody_weekly"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Monthly pane -->
+  <div id="rrPane_monthly" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+      <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <h3 style="font-size:1rem;color:#8b5cf6;margin:0 0 8px">因果ネットワーク（月次）</h3>
+        <svg id="rrNet_monthly" width="420" height="420"></svg>
+        <p style="font-size:0.75rem;color:#888;margin:6px 0 0">矢印色：濃紫=高F値 ｜ ラベル：上=RS lag 下=RRS lag ｜ ⊙=ラグ一致</p>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <h3 style="font-size:1rem;color:#8b5cf6;margin:0 0 8px">ラグ比較ヒートマップ（月次）</h3>
+        <div id="rrHm_monthly" style="overflow-x:auto"></div>
+        <p style="font-size:0.75rem;color:#888;margin:6px 0 0">緑=RS・RRSラグ一致 ｜ 橙=ラグ相違 ｜ 上段=RSラグ 下段=RRSラグ</p>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+      <h3 style="font-size:1rem;color:#8b5cf6;margin:0 0 12px">RS∩RRS 月次ペア詳細</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+        <thead><tr style="background:#f3e8ff">
+          <th style="padding:8px;text-align:left;border-bottom:2px solid #8b5cf6">Cause</th>
+          <th style="padding:8px;text-align:left;border-bottom:2px solid #8b5cf6">Effect</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RS Lag</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RS 有意年</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RRS Lag</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">RRS 有意年</th>
+          <th style="padding:8px;text-align:center;border-bottom:2px solid #8b5cf6">ラグ一致</th>
+        </tr></thead>
+        <tbody id="rrTbody_monthly"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SECTORS = ["Basic Materials", "Communication Services", "Consumer Cyclical", "Consumer Defensive", "Energy", "Financial Services", "Healthcare", "Industrials", "Real Estate", "Technology", "Utilities"];
+  const SHORT = {"Basic Materials": "BasicMat", "Communication Services": "CommSvcs", "Consumer Cyclical": "ConsCyc", "Consumer Defensive": "ConsDef", "Energy": "Energy", "Financial Services": "FinSvc", "Healthcare": "Health", "Industrials": "Indust", "Real Estate": "RealEst", "Technology": "Tech", "Utilities": "Util"};
+  const allLinks = {
+    weekly: [{"source": "Consumer Cyclical", "target": "Healthcare", "lag_RS": 1, "years_RS": 10, "lag_RRS": 5, "years_RRS": 8, "lag_match": false}, {"source": "Utilities", "target": "Technology", "lag_RS": 2, "years_RS": 7, "lag_RRS": 1, "years_RRS": 7, "lag_match": false}, {"source": "Utilities", "target": "Financial Services", "lag_RS": 1, "years_RS": 8, "lag_RRS": 5, "years_RRS": 6, "lag_match": false}, {"source": "Healthcare", "target": "Communication Services", "lag_RS": 3, "years_RS": 5, "lag_RRS": 1, "years_RRS": 9, "lag_match": false}, {"source": "Financial Services", "target": "Utilities", "lag_RS": 5, "years_RS": 5, "lag_RRS": 1, "years_RRS": 9, "lag_match": false}, {"source": "Consumer Defensive", "target": "Energy", "lag_RS": 1, "years_RS": 5, "lag_RRS": 1, "years_RRS": 8, "lag_match": true}, {"source": "Communication Services", "target": "Basic Materials", "lag_RS": 1, "years_RS": 6, "lag_RRS": 3, "years_RRS": 6, "lag_match": false}, {"source": "Industrials", "target": "Consumer Defensive", "lag_RS": 1, "years_RS": 5, "lag_RRS": 4, "years_RRS": 7, "lag_match": false}, {"source": "Utilities", "target": "Consumer Cyclical", "lag_RS": 5, "years_RS": 6, "lag_RRS": 6, "years_RRS": 5, "lag_match": false}, {"source": "Consumer Defensive", "target": "Real Estate", "lag_RS": 1, "years_RS": 5, "lag_RRS": 2, "years_RRS": 6, "lag_match": false}],
+    monthly: [{"source": "Healthcare", "target": "Communication Services", "lag_RS": 1, "years_RS": 10, "lag_RRS": 1, "years_RRS": 6, "lag_match": true}, {"source": "Financial Services", "target": "Energy", "lag_RS": 2, "years_RS": 8, "lag_RRS": 3, "years_RRS": 5, "lag_match": false}, {"source": "Communication Services", "target": "Consumer Cyclical", "lag_RS": 3, "years_RS": 5, "lag_RRS": 3, "years_RRS": 6, "lag_match": true}, {"source": "Communication Services", "target": "Industrials", "lag_RS": 8, "years_RS": 5, "lag_RRS": 1, "years_RRS": 6, "lag_match": false}]
+  };
+  const allPairs = {
+    weekly: [{"cause": "Consumer Cyclical", "effect": "Healthcare", "lag_RS": 1, "years_RS": 10, "lag_RRS": 5, "years_RRS": 8}, {"cause": "Utilities", "effect": "Technology", "lag_RS": 2, "years_RS": 7, "lag_RRS": 1, "years_RRS": 7}, {"cause": "Utilities", "effect": "Financial Services", "lag_RS": 1, "years_RS": 8, "lag_RRS": 5, "years_RRS": 6}, {"cause": "Healthcare", "effect": "Communication Services", "lag_RS": 3, "years_RS": 5, "lag_RRS": 1, "years_RRS": 9}, {"cause": "Financial Services", "effect": "Utilities", "lag_RS": 5, "years_RS": 5, "lag_RRS": 1, "years_RRS": 9}, {"cause": "Consumer Defensive", "effect": "Energy", "lag_RS": 1, "years_RS": 5, "lag_RRS": 1, "years_RRS": 8}, {"cause": "Communication Services", "effect": "Basic Materials", "lag_RS": 1, "years_RS": 6, "lag_RRS": 3, "years_RRS": 6}, {"cause": "Industrials", "effect": "Consumer Defensive", "lag_RS": 1, "years_RS": 5, "lag_RRS": 4, "years_RRS": 7}, {"cause": "Utilities", "effect": "Consumer Cyclical", "lag_RS": 5, "years_RS": 6, "lag_RRS": 6, "years_RRS": 5}, {"cause": "Consumer Defensive", "effect": "Real Estate", "lag_RS": 1, "years_RS": 5, "lag_RRS": 2, "years_RRS": 6}],
+    monthly: [{"cause": "Healthcare", "effect": "Communication Services", "lag_RS": 1, "years_RS": 10, "lag_RRS": 1, "years_RRS": 6}, {"cause": "Financial Services", "effect": "Energy", "lag_RS": 2, "years_RS": 8, "lag_RRS": 3, "years_RRS": 5}, {"cause": "Communication Services", "effect": "Consumer Cyclical", "lag_RS": 3, "years_RS": 5, "lag_RRS": 3, "years_RRS": 6}, {"cause": "Communication Services", "effect": "Industrials", "lag_RS": 8, "years_RS": 5, "lag_RRS": 1, "years_RRS": 6}]
+  };
+  const allHm = {
+    weekly: {"Basic Materials": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Communication Services": {"Basic Materials": {"lag_RS": 1, "lag_RRS": 3, "match": false}, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Consumer Cyclical": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": {"lag_RS": 1, "lag_RRS": 5, "match": false}, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Consumer Defensive": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": {"lag_RS": 1, "lag_RRS": 1, "match": true}, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": {"lag_RS": 1, "lag_RRS": 2, "match": false}, "Technology": null, "Utilities": null}, "Energy": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Financial Services": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": {"lag_RS": 5, "lag_RRS": 1, "match": false}}, "Healthcare": {"Basic Materials": null, "Communication Services": {"lag_RS": 3, "lag_RRS": 1, "match": false}, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Industrials": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": {"lag_RS": 1, "lag_RRS": 4, "match": false}, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Real Estate": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Technology": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Utilities": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": {"lag_RS": 5, "lag_RRS": 6, "match": false}, "Consumer Defensive": null, "Energy": null, "Financial Services": {"lag_RS": 1, "lag_RRS": 5, "match": false}, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": {"lag_RS": 2, "lag_RRS": 1, "match": false}, "Utilities": null}},
+    monthly: {"Basic Materials": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Communication Services": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": {"lag_RS": 3, "lag_RRS": 3, "match": true}, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": {"lag_RS": 8, "lag_RRS": 1, "match": false}, "Real Estate": null, "Technology": null, "Utilities": null}, "Consumer Cyclical": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Consumer Defensive": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Energy": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Financial Services": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": {"lag_RS": 2, "lag_RRS": 3, "match": false}, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Healthcare": {"Basic Materials": null, "Communication Services": {"lag_RS": 1, "lag_RRS": 1, "match": true}, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Industrials": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Real Estate": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Technology": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}, "Utilities": {"Basic Materials": null, "Communication Services": null, "Consumer Cyclical": null, "Consumer Defensive": null, "Energy": null, "Financial Services": null, "Healthcare": null, "Industrials": null, "Real Estate": null, "Technology": null, "Utilities": null}}
+  };
+
+  window.switchRRTab = function(freq, btn) {
+    ['weekly','monthly'].forEach(f => {
+      document.getElementById('rrPane_'+f).style.display = f===freq?'block':'none';
+      document.getElementById('rrBtn_'+f).style.background = f===freq?'#8b5cf6':'#e2d9f3';
+      document.getElementById('rrBtn_'+f).style.color = f===freq?'#fff':'#555';
+    });
+  };
+
+  function drawRRNet(freq) {
+    const links = allLinks[freq];
+    const svg = d3.select('#rrNet_'+freq);
+    svg.selectAll('*').remove();
+    const W=420, cx=210, cy=210, R=165;
+    const n = SECTORS.length;
+    const pos = {};
+    SECTORS.forEach((s,i) => {
+      const a = (i/n)*2*Math.PI - Math.PI/2;
+      pos[s] = [cx + R*Math.cos(a), cy + R*Math.sin(a)];
+    });
+    const defs = svg.append('defs');
+    const maxYrs = d3.max(links, d => d.years_RS + d.years_RRS) || 20;
+    const cScale = d3.scaleSequential(d3.interpolatePurples).domain([10, maxYrs]);
+
+    links.forEach((lk,li) => {
+      const [x1,y1] = pos[lk.source], [x2,y2] = pos[lk.target];
+      const mid = [(x1+x2)/2, (y1+y2)/2];
+      const dx = x2-x1, dy = y2-y1;
+      const len = Math.sqrt(dx*dx+dy*dy)||1;
+      const curve = 30;
+      const cx2 = mid[0] - (dy/len)*curve, cy2 = mid[1] + (dx/len)*curve;
+      const clr = cScale(lk.years_RS + lk.years_RRS);
+      const mid2 = [
+        0.25*x1+0.5*cx2+0.25*x2,
+        0.25*y1+0.5*cy2+0.25*y2
+      ];
+      const markId = 'rrMark_'+freq+'_'+li;
+      defs.append('marker').attr('id',markId)
+        .attr('markerWidth',8).attr('markerHeight',6)
+        .attr('refX',8).attr('refY',3).attr('orient','auto')
+        .append('polygon').attr('points','0 0,8 3,0 6').attr('fill',clr);
+      svg.append('path')
+        .attr('d',`M${x1},${y1} Q${cx2},${cy2} ${x2},${y2}`)
+        .attr('fill','none').attr('stroke',clr).attr('stroke-width',2.5)
+        .attr('marker-end',`url(#${markId})`);
+      // RS label (above midpoint)
+      const nx = -(cy2-mid[1])/(Math.sqrt((cx2-mid[0])**2+(cy2-mid[1])**2)||1);
+      const ny = (cx2-mid[0])/(Math.sqrt((cx2-mid[0])**2+(cy2-mid[1])**2)||1);
+      const lx = mid2[0]+nx*12, ly = mid2[1]+ny*12;
+      const lagMatch = lk.lag_RS === lk.lag_RRS;
+      svg.append('text').attr('x',lx).attr('y',ly-7)
+        .attr('text-anchor','middle').attr('font-size',8).attr('fill','#1e40af')
+        .text((lagMatch?'⊙':'')+'RS:'+lk.lag_RS+'w');
+      svg.append('text').attr('x',lx).attr('y',ly+7)
+        .attr('text-anchor','middle').attr('font-size',8).attr('fill','#6b21a8')
+        .text('RRS:'+lk.lag_RRS+'w');
     });
 
-    g.on("mouseover",function(ev){
-      d3.select(this).select("path").attr("opacity",1);
-      document.getElementById(infoId).innerHTML=
-        `<div class="edge-title">${l.source} → ${l.target}</div>`+
-        `<span style='color:#1565c0;font-weight:700'>RS</span>: ${l.rs_yr}年/lag${l.rs_lag}週<br>`+
-        `<span style='color:#6a1b9a;font-weight:700'>RRS</span>: ${l.rrs_yr}年/lag${l.rrs_lag}週<br>`+
-        `<span style='color:#2e7d32;font-weight:700'>BP</span>: ${l.bp_yr}年/lag${l.bp_lag}週`;
-      const tt=document.getElementById("tt");
-      tt.innerHTML=SHORT[l.source]+"→"+SHORT[l.target]; tt.style.opacity=1;
-      tt.style.left=(ev.clientX+12)+"px"; tt.style.top=(ev.clientY-10)+"px";
-    }).on("mousemove",ev=>{
-      const tt=document.getElementById("tt"); tt.style.left=(ev.clientX+12)+"px"; tt.style.top=(ev.clientY-10)+"px";
-    }).on("mouseout",function(){
-      d3.select(this).select("path").attr("opacity",.8);
-      document.getElementById("tt").style.opacity=0;
+    SECTORS.forEach(s => {
+      const [x,y] = pos[s];
+      svg.append('circle').attr('cx',x).attr('cy',y).attr('r',22)
+        .attr('fill','#f3e8ff').attr('stroke','#8b5cf6').attr('stroke-width',1.5);
+      const words = SHORT[s].replace(/([A-Z])/g,' $1').trim().split(' ');
+      words.forEach((w,i) => {
+        svg.append('text').attr('x',x).attr('y',y+(i-(words.length-1)/2)*9)
+          .attr('text-anchor','middle').attr('font-size',6.5).attr('fill','#3b0764').text(w);
+      });
     });
-  });
-  drawNodes(svg,pos);
-}
+  }
 
-function drawTripleTable(){
-  const rows=RB.triple_w_table;
-  let h="";
-  rows.forEach((r,i)=>{
-    const mkbadge=(yr,lag,bg)=>`<span class='lag-b' style='background:${bg}'>${lag}週</span> <small style='color:#78909c'>(${yr}年)</small>`;
-    h+=`<tr><td style='color:#90a4ae'>${i+1}</td><td><strong>${r.cause}</strong></td><td><strong>${r.effect}</strong></td>`+
-       `<td style='text-align:center'>${mkbadge(r.rs_yr,r.rs_lag,"#1565c0")}</td>`+
-       `<td style='text-align:center'>${mkbadge(r.rrs_yr,r.rrs_lag,"#6a1b9a")}</td>`+
-       `<td style='text-align:center'>${mkbadge(r.bp_yr,r.bp_lag,"#2e7d32")}</td></tr>`;
-  });
-  document.getElementById("triple-w-tbody").innerHTML=h;
-}
+  function drawRRHeatmap(freq) {
+    const hm = allHm[freq];
+    const container = document.getElementById('rrHm_'+freq);
+    const unit = freq==='weekly'?'w':'m';
+    let html = '<table style="border-collapse:collapse;font-size:9px">';
+    html += '<tr><th style="padding:2px 4px;background:#f3e8ff"></th>';
+    SECTORS.forEach(s => {
+      html += `<th style="padding:2px 3px;background:#f3e8ff;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;max-width:20px">${SHORT[s]}</th>`;
+    });
+    html += '</tr>';
+    SECTORS.forEach(s => {
+      const hasAny = SECTORS.some(t => hm[s][t] !== null);
+      if (!hasAny) return;
+      html += `<tr><td style="padding:2px 4px;font-weight:bold;font-size:8px;white-space:nowrap">${SHORT[s]}</td>`;
+      SECTORS.forEach(t => {
+        const v = hm[s][t];
+        if (!v) { html += '<td style="padding:2px;background:#f9f9f9"></td>'; return; }
+        const bg = v.match?'#bbf7d0':'#fed7aa';
+        html += `<td style="padding:2px 3px;background:${bg};text-align:center;border:1px solid #e0d0f0">
+          <span style="color:#166534;font-weight:bold">${v.lag_RS}${unit}</span><br>
+          <span style="color:#4c1d95">${v.lag_RRS}${unit}</span></td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</table>';
+    container.innerHTML = html;
+  }
 
-// Init
-drawRBNet('w');
-drawRBHeatmap('rb-w-hm', RB.w_hm,'週');
-drawRBTable('rb-w-tbody', RB.w_links,'週');
-drawRBHeatmap('rb-m-hm', RB.m_hm,'ヶ月');
-drawRBTable('rb-m-tbody', RB.m_links,'ヶ月');
-drawTripleNet();
-drawTripleTable();
+  function drawRRTable(freq) {
+    const pairs = allPairs[freq];
+    const unit = freq==='weekly'?'w':'m';
+    const tbody = document.getElementById('rrTbody_'+freq);
+    tbody.innerHTML = pairs.map(r => {
+      const match = r.lag_RS === r.lag_RRS;
+      return `<tr style="border-bottom:1px solid #f0e8ff">
+        <td style="padding:7px 8px">${r.cause}</td>
+        <td style="padding:7px 8px">${r.effect}</td>
+        <td style="padding:7px 8px;text-align:center;color:#1e40af;font-weight:700">${r.lag_RS}${unit}</td>
+        <td style="padding:7px 8px;text-align:center">${r.years_RS}yr</td>
+        <td style="padding:7px 8px;text-align:center;color:#6b21a8;font-weight:700">${r.lag_RRS}${unit}</td>
+        <td style="padding:7px 8px;text-align:center">${r.years_RRS}yr</td>
+        <td style="padding:7px 8px;text-align:center">${match?'<span style="color:#16a34a;font-size:1.1rem">⊙</span>':'<span style="color:#ea580c">✕</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Initialize weekly on load
+  document.addEventListener('DOMContentLoaded', function() {
+    drawRRNet('weekly'); drawRRHeatmap('weekly'); drawRRTable('weekly');
+    drawRRNet('monthly'); drawRRHeatmap('monthly'); drawRRTable('monthly');
+  });
+  // Also try immediately (in case DOMContentLoaded already fired)
+  setTimeout(function() {
+    if (document.getElementById('rrNet_weekly')) {
+      drawRRNet('weekly'); drawRRHeatmap('weekly'); drawRRTable('weekly');
+      drawRRNet('monthly'); drawRRHeatmap('monthly'); drawRRTable('monthly');
+    }
+  }, 300);
+})();
+</script>
+
+
+<!-- ===== SECTION 10: RS∩RRS∩BP TRIPLE INTERSECTION ===== -->
+<div class="section" id="sec-triple" style="margin-top:60px">
+  <h2 style="font-size:1.8rem;color:#1a1a2e;border-left:5px solid #e65100;padding-left:16px;margin-bottom:8px">
+    ⑩ RS∩RRS∩BP：全3指標共通 — 最高信頼グレンジャー因果
+  </h2>
+  <p style="color:#555;margin-bottom:16px;line-height:1.7">
+    価格相対強度（RS）・β除去強度（RRS）・買い圧力（BP）の3つの異なる視点すべてで
+    5年以上継続して有意と判定されたペアのみ。指標間の相関に依存せず、3つの独立した手法が
+    同時に同一因果方向を支持することで、最も構造的に安定したセクターローテーション信号を特定。
+  </p>
+
+  <!-- Summary badges -->
+  <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap">
+    <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:12px;padding:16px 28px;text-align:center;border:2px solid #e65100">
+      <div style="font-size:11px;color:#bf360c;font-weight:700;letter-spacing:1px">週次 3指標共通</div>
+      <div style="font-size:36px;font-weight:800;color:#e65100">5</div>
+      <div style="font-size:11px;color:#6d4c41">ペア（週次110組中）</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#fff8e1,#fff3cd);border-radius:12px;padding:16px 28px;text-align:center;border:2px solid #f57f17">
+      <div style="font-size:11px;color:#e65100;font-weight:700;letter-spacing:1px">月次 3指標共通</div>
+      <div style="font-size:36px;font-weight:800;color:#f57f17">1</div>
+      <div style="font-size:11px;color:#6d4c41">ペア（月次110組中）</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:12px;padding:16px 28px;text-align:center;border:2px solid #2e7d32;flex:1;min-width:200px">
+      <div style="font-size:11px;color:#1b5e20;font-weight:700;letter-spacing:1px">週月次両方共通</div>
+      <div style="font-size:20px;font-weight:800;color:#2e7d32;margin:4px 0">Healthcare → CommSvcs</div>
+      <div style="font-size:11px;color:#388e3c">唯一の週次＋月次ダブル確認ペア</div>
+    </div>
+  </div>
+
+  <!-- Weekly Network -->
+  <div style="background:#fff8e1;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+    <h3 style="font-size:1.1rem;font-weight:800;color:#e65100;margin:0 0 12px">
+      ⭐ 週次 全3指標共通ネットワーク（5ペア）
+    </h3>
+    <p style="font-size:0.8rem;color:#666;margin-bottom:12px">
+      各矢印に RS（青）・RRS（紫）・BP（緑）3つのラグ値を表示。矢印の太さ＝最小有意年数。
+    </p>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      <svg id="triple10-w-net" width="560" height="520"></svg>
+      <div id="triple10-w-info" style="flex:1;min-width:240px;font-size:0.8rem;color:#555;line-height:1.8"></div>
+    </div>
+  </div>
+
+  <!-- Weekly Table -->
+  <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:32px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+    <h3 style="font-size:1rem;color:#e65100;margin:0 0 12px">週次 3指標共通ペア詳細</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+      <thead><tr style="background:#fff3e0">
+        <th style="padding:8px;text-align:left;border-bottom:2px solid #e65100">Cause</th>
+        <th style="padding:8px;text-align:left;border-bottom:2px solid #e65100">Effect</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100;color:#1e40af">RS Lag</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100;color:#1e40af">RS 有意年</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100;color:#6b21a8">RRS Lag</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100;color:#6b21a8">RRS 有意年</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100;color:#166534">BP Lag</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100;color:#166534">BP 有意年</th>
+        <th style="padding:8px;text-align:center;border-bottom:2px solid #e65100">最小有意年</th>
+      </tr></thead>
+      <tbody id="triple10-w-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Monthly Highlight -->
+  <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:12px;padding:24px;border:2px solid #43a047;box-shadow:0 4px 16px rgba(76,175,80,.2)">
+    <h3 style="font-size:1.1rem;font-weight:800;color:#2e7d32;margin:0 0 12px">
+      💎 月次 全3指標共通（1ペア） — 最強シグナル
+    </h3>
+    <p style="font-size:0.85rem;color:#388e3c;margin-bottom:16px">
+      月次の長期スパンでも3指標すべてが支持する因果は、最も構造的・マクロ的なセクターローテーションを示す。
+    </p>
+    <div id="triple10-m-content"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SECTORS = ["Basic Materials", "Communication Services", "Consumer Cyclical", "Consumer Defensive", "Energy", "Financial Services", "Healthcare", "Industrials", "Real Estate", "Technology", "Utilities"];
+  const SHORT = {"Basic Materials": "BasicMat", "Communication Services": "CommSvcs", "Consumer Cyclical": "ConsCyc", "Consumer Defensive": "ConsDef", "Energy": "Energy", "Financial Services": "FinSvc", "Healthcare": "Health", "Industrials": "Indust", "Real Estate": "RealEst", "Technology": "Tech", "Utilities": "Util"};
+  const TW = [{"source": "Communication Services", "target": "Basic Materials", "rs_yr": 6, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 3, "bp_yr": 5, "bp_lag": 1, "min_years": 5}, {"source": "Financial Services", "target": "Utilities", "rs_yr": 5, "rs_lag": 5, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 1, "min_years": 5}, {"source": "Healthcare", "target": "Communication Services", "rs_yr": 5, "rs_lag": 3, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 7, "bp_lag": 2, "min_years": 5}, {"source": "Utilities", "target": "Consumer Cyclical", "rs_yr": 6, "rs_lag": 5, "rrs_yr": 5, "rrs_lag": 6, "bp_yr": 5, "bp_lag": 3, "min_years": 5}, {"source": "Utilities", "target": "Financial Services", "rs_yr": 8, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 5, "bp_yr": 6, "bp_lag": 1, "min_years": 6}];
+  const TM = [{"source": "Healthcare", "target": "Communication Services", "rs_yr": 10, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 7, "min_years": 5}];
+  const TWT = [{"cause": "Communication Services", "effect": "Basic Materials", "rs_yr": 6, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 3, "bp_yr": 5, "bp_lag": 1}, {"cause": "Financial Services", "effect": "Utilities", "rs_yr": 5, "rs_lag": 5, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 1}, {"cause": "Healthcare", "effect": "Communication Services", "rs_yr": 5, "rs_lag": 3, "rrs_yr": 9, "rrs_lag": 1, "bp_yr": 7, "bp_lag": 2}, {"cause": "Utilities", "effect": "Consumer Cyclical", "rs_yr": 6, "rs_lag": 5, "rrs_yr": 5, "rrs_lag": 6, "bp_yr": 5, "bp_lag": 3}, {"cause": "Utilities", "effect": "Financial Services", "rs_yr": 8, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 5, "bp_yr": 6, "bp_lag": 1}];
+  const TMT = [{"cause": "Healthcare", "effect": "Communication Services", "rs_yr": 10, "rs_lag": 1, "rrs_yr": 6, "rrs_lag": 1, "bp_yr": 5, "bp_lag": 7}];
+
+  // Node positions on circle
+  function nodePos(cx,cy,R){
+    const pos={};
+    SECTORS.forEach((s,i)=>{
+      const a=(i/SECTORS.length)*2*Math.PI - Math.PI/2;
+      pos[s]=[cx+R*Math.cos(a),cy+R*Math.sin(a)];
+    });
+    return pos;
+  }
+
+  function drawTriple10Net(){
+    const svg=d3.select('#triple10-w-net');
+    svg.selectAll('*').remove();
+    const pos=nodePos(280,260,195);
+    const defs=svg.append('defs');
+    const colors=['#90a4ae','#f39c12','#e74c3c','#f57f17','#c62828'];
+    const info=document.getElementById('triple10-w-info');
+    let infoHtml='<strong style="color:#e65100">週次 全3指標共通ペア詳細</strong><br><br>';
+
+    TW.forEach((lk,li)=>{
+      const [x1,y1]=pos[lk.source],[x2,y2]=pos[lk.target];
+      const mid=[(x1+x2)/2,(y1+y2)/2];
+      const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy)||1;
+      const curve=35;
+      const cx2=mid[0]-(dy/len)*curve,cy2=mid[1]+(dx/len)*curve;
+      const clr=colors[Math.min(li,colors.length-1)];
+      const w=1+lk.min_years/4;
+      const mid2=[0.25*x1+0.5*cx2+0.25*x2, 0.25*y1+0.5*cy2+0.25*y2];
+      const markId='t10m_'+li;
+      defs.append('marker').attr('id',markId).attr('markerWidth',8).attr('markerHeight',6)
+        .attr('refX',8).attr('refY',3).attr('orient','auto')
+        .append('polygon').attr('points','0 0,8 3,0 6').attr('fill',clr);
+      svg.append('path')
+        .attr('d',`M${x1},${y1} Q${cx2},${cy2} ${x2},${y2}`)
+        .attr('fill','none').attr('stroke',clr).attr('stroke-width',w)
+        .attr('marker-end',`url(#${markId})`);
+      // 3 labels: RS/RRS/BP
+      const nx=-(cy2-mid[1])/(Math.sqrt((cx2-mid[0])**2+(cy2-mid[1])**2)||1);
+      const ny=(cx2-mid[0])/(Math.sqrt((cx2-mid[0])**2+(cy2-mid[1])**2)||1);
+      const lx=mid2[0]+nx*14, ly=mid2[1]+ny*14;
+      svg.append('text').attr('x',lx).attr('y',ly-12).attr('text-anchor','middle')
+        .attr('font-size',7.5).attr('fill','#1e40af').text('RS:'+lk.rs_lag+'w');
+      svg.append('text').attr('x',lx).attr('y',ly).attr('text-anchor','middle')
+        .attr('font-size',7.5).attr('fill','#6b21a8').text('RRS:'+lk.rrs_lag+'w');
+      svg.append('text').attr('x',lx).attr('y',ly+12).attr('text-anchor','middle')
+        .attr('font-size',7.5).attr('fill','#166534').text('BP:'+lk.bp_lag+'w');
+
+      infoHtml+=`<div style="padding:6px 10px;background:#fff8e1;border-radius:6px;margin-bottom:6px;border-left:3px solid ${clr}">
+        <strong>${SHORT[lk.source]||lk.source}</strong> → <strong>${SHORT[lk.target]||lk.target}</strong><br>
+        <span style="color:#1e40af">RS ${lk.rs_lag}w (${lk.rs_yr}yr)</span> ·
+        <span style="color:#6b21a8">RRS ${lk.rrs_lag}w (${lk.rrs_yr}yr)</span> ·
+        <span style="color:#166534">BP ${lk.bp_lag}w (${lk.bp_yr}yr)</span>
+      </div>`;
+    });
+
+    SECTORS.forEach(s=>{
+      const [x,y]=pos[s];
+      const isNode=TW.some(l=>l.source===s||l.target===s);
+      svg.append('circle').attr('cx',x).attr('cy',y).attr('r',22)
+        .attr('fill',isNode?'#fff8e1':'#f5f5f5')
+        .attr('stroke',isNode?'#e65100':'#ccc').attr('stroke-width',isNode?2:1);
+      (SHORT[s]||s).replace(/([A-Z])/g,' $1').trim().split(' ').forEach((w2,i,arr)=>{
+        svg.append('text').attr('x',x).attr('y',y+(i-(arr.length-1)/2)*9)
+          .attr('text-anchor','middle').attr('font-size',6.5)
+          .attr('fill',isNode?'#bf360c':'#999').text(w2);
+      });
+    });
+
+    info.innerHTML=infoHtml;
+  }
+
+  function drawTriple10Table(){
+    const rows=TWT;
+    document.getElementById('triple10-w-tbody').innerHTML=rows.map(r=>{
+      return `<tr style="border-bottom:1px solid #fff3e0">
+        <td style="padding:7px 8px">${r.cause}</td>
+        <td style="padding:7px 8px">${r.effect}</td>
+        <td style="padding:7px 8px;text-align:center;color:#1e40af;font-weight:700">${r.rs_lag}w</td>
+        <td style="padding:7px 8px;text-align:center">${r.rs_yr}yr</td>
+        <td style="padding:7px 8px;text-align:center;color:#6b21a8;font-weight:700">${r.rrs_lag}w</td>
+        <td style="padding:7px 8px;text-align:center">${r.rrs_yr}yr</td>
+        <td style="padding:7px 8px;text-align:center;color:#166534;font-weight:700">${r.bp_lag}w</td>
+        <td style="padding:7px 8px;text-align:center">${r.bp_yr}yr</td>
+        <td style="padding:7px 8px;text-align:center;font-weight:700">${r.min_years}yr</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function drawTriple10Monthly(){
+    const container=document.getElementById('triple10-m-content');
+    const rows=TMT;
+    let html='';
+    rows.forEach(r=>{
+      html+=`<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <div style="background:#fff;border-radius:10px;padding:20px 32px;text-align:center;border:2px solid #43a047;min-width:200px">
+          <div style="font-size:1.5rem;font-weight:800;color:#2e7d32">${r.cause}</div>
+          <div style="font-size:2rem;color:#43a047;margin:4px 0">↓</div>
+          <div style="font-size:1.5rem;font-weight:800;color:#2e7d32">${r.effect}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;flex:1;min-width:300px">
+          <div style="background:#dbeafe;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:#1e40af;font-weight:700;margin-bottom:4px">RS（相対強度）</div>
+            <div style="font-size:24px;font-weight:800;color:#1e40af">${r.rs_lag}m</div>
+            <div style="font-size:11px;color:#3b82f6">${r.rs_yr}年以上有意</div>
+          </div>
+          <div style="background:#ede9fe;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:#6b21a8;font-weight:700;margin-bottom:4px">RRS（β除去強度）</div>
+            <div style="font-size:24px;font-weight:800;color:#6b21a8">${r.rrs_lag}m</div>
+            <div style="font-size:11px;color:#8b5cf6">${r.rrs_yr}年以上有意</div>
+          </div>
+          <div style="background:#dcfce7;border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:#166534;font-weight:700;margin-bottom:4px">BP（買い圧力）</div>
+            <div style="font-size:24px;font-weight:800;color:#166534">${r.bp_lag}m</div>
+            <div style="font-size:11px;color:#22c55e">${r.bp_yr}年以上有意</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.85rem;color:#555;margin-top:16px;line-height:1.7">
+        ヘルスケアセクターのモメンタム変化は、<strong>約1ヶ月後（RS・RRS）または7ヶ月後（BP）</strong>に
+        通信セクターへ波及することを、3つの独立した指標が長期的に一貫して示している。
+        RSとRRSは同一ラグ（1ヶ月）でコンセンサスを形成し、BPのより長いラグ（7ヶ月）は
+        実際の資金フロー確認に時間を要することを示唆する。
+      </p>`;
+    });
+    container.innerHTML=html;
+  }
+
+  // Init
+  document.addEventListener('DOMContentLoaded',function(){
+    drawTriple10Net(); drawTriple10Table(); drawTriple10Monthly();
+  });
+  setTimeout(function(){
+    if(document.getElementById('triple10-w-net')){
+      drawTriple10Net(); drawTriple10Table(); drawTriple10Monthly();
+    }
+  },400);
 })();
 </script>
 
 </div><!-- /container -->
+
 <div class="tooltip" id="tt"></div>
 
 <script>
