@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>セクターローテーション Granger因果分析 — RS / RRS / BP 比較レポート</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Meiryo,sans-serif;background:#f0f2f5;color:#2d3436;line-height:1.6;font-size:14px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1a237e 0%,#283593 50%,#1565c0 100%);color:#fff;padding:44px 32px 36px;text-align:center}
+.hero h1{font-size:24px;font-weight:800;letter-spacing:.4px;margin-bottom:8px}
+.hero .sub{font-size:13px;opacity:.85;max-width:700px;margin:8px auto 0;line-height:1.7}
+.chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:12px}
+
+/* LAYOUT */
+.container{max-width:1140px;margin:0 auto;padding:28px 20px}
+.section{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:28px;overflow:hidden}
+.section-header{background:#f8f9fa;border-bottom:2px solid #e9ecef;padding:18px 24px 14px}
+.section-header h2{font-size:18px;color:#1a237e;font-weight:700;margin-bottom:4px}
+.section-header .desc{font-size:13px;color:#636e72}
+.section-body{padding:24px}
+hr.dv{border:none;border-top:1px dashed #e0e0e0;margin:20px 0}
+
+/* METHOD CARDS */
+.method-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.mcrd{flex:1;min-width:160px;background:#f8f9fa;border-radius:8px;border-left:4px solid;padding:14px}
+.mcrd h4{font-size:13px;font-weight:700;margin-bottom:6px}
+.mcrd p{font-size:12px;color:#636e72;line-height:1.6}
+.mc-blue{border-color:#1565c0}.mc-blue h4{color:#1565c0}
+.mc-green{border-color:#2e7d32}.mc-green h4{color:#2e7d32}
+.mc-orange{border-color:#e65100}.mc-orange h4{color:#e65100}
+
+/* COMPARISON TABLE */
+table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+table.cmp th{background:#37474f;color:#fff;padding:9px 14px;font-size:12px}
+table.cmp th:first-child{text-align:left}
+table.cmp th:not(:first-child){text-align:center}
+table.cmp td{padding:10px 14px;border-bottom:1px solid #f0f0f0;text-align:center}
+table.cmp td:first-child{text-align:left;font-weight:700}
+table.cmp tr:nth-child(odd) td{background:#fafafa}
+table.cmp tr:hover td{background:#f0f4ff}
+.best{color:#1b5e20;font-weight:800;background:#e8f5e9!important;border-radius:4px;padding:2px 6px;display:inline-block}
+.note-cell{font-size:11px;color:#e65100;font-weight:600}
+
+/* METRIC TABS */
+.metric-section{margin-bottom:28px}
+.metric-header{display:flex;align-items:center;gap:12px;background:#37474f;color:#fff;
+  padding:14px 24px;border-radius:10px 10px 0 0}
+.metric-header h3{font-size:16px;font-weight:700}
+.metric-badge{font-size:12px;background:rgba(255,255,255,.25);border-radius:12px;padding:2px 12px}
+.tab-bar{display:flex;border-bottom:2px solid #e0e0e0;background:#f8f9fa;padding:0 24px}
+.tab-btn{padding:10px 20px;cursor:pointer;font-size:13px;font-weight:600;color:#78909c;
+  border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn.active{color:#1565c0;border-bottom-color:#1565c0}
+.tab-pane{display:none;padding:24px}
+.tab-pane.active{display:block}
+
+/* STATS ROW */
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.stat{flex:1;min-width:90px;background:#f8f9fa;border-radius:7px;padding:10px 12px;
+  text-align:center;border-top:3px solid}
+.stat .val{font-size:22px;font-weight:800;line-height:1}
+.stat .lbl{font-size:10px;color:#78909c;margin-top:2px}
+.sb{border-color:#1565c0}.sb .val{color:#1565c0}
+.sg{border-color:#2e7d32}.sg .val{color:#2e7d32}
+.so{border-color:#e65100}.so .val{color:#e65100}
+.sp{border-color:#6a1b9a}.sp .val{color:#6a1b9a}
+
+/* NETWORK */
+.net-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.net-ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:#f8f9fa;border:1px solid #e0e0e0;border-radius:7px;padding:8px 14px;
+  margin-bottom:14px;font-size:12px;color:#455a64}
+.net-ctrl label{font-weight:600}
+input[type=range]{width:100px;accent-color:#1565c0}
+.cv{font-weight:700;color:#1565c0}
+.legend-box{min-width:200px}
+.legend-box h4{font-size:12px;font-weight:700;color:#455a64;margin-bottom:8px}
+.li{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:#455a64}
+.ll{height:3px;border-radius:2px;flex-shrink:0;width:36px}
+.edge-box{background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;
+  padding:10px 12px;margin-top:14px;font-size:12px;color:#37474f;line-height:1.6;min-height:52px}
+.edge-title{font-weight:700;color:#1a237e;font-size:12px;margin-bottom:2px}
+
+/* HEATMAP */
+.hm-wrap{overflow-x:auto;margin-top:4px}
+table.hm{border-collapse:collapse;font-size:11px;white-space:nowrap}
+table.hm th{padding:5px 7px;background:#37474f;color:#fff;font-weight:600;font-size:9px;text-align:center}
+table.hm th.rl{text-align:left;background:#455a64;min-width:96px;font-size:10px}
+table.hm th.cl{min-width:66px}
+table.hm td{padding:5px 7px;text-align:center;font-size:11px;font-weight:600;border:1px solid #eceff1}
+table.hm td.rl{text-align:left;background:#f5f5f5;font-weight:700;font-size:10px;border:none;padding-left:8px}
+table.hm td.em{background:#fafafa;color:#ccc;font-weight:400;font-size:9px}
+
+/* PAIRS TABLE */
+table.pt{width:100%;border-collapse:collapse;font-size:13px}
+table.pt th{background:#37474f;color:#fff;padding:8px 12px;font-size:12px;text-align:left}
+table.pt th:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)){text-align:center}
+table.pt td{padding:7px 12px;border-bottom:1px solid #f0f0f0}
+table.pt td:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)){text-align:center}
+table.pt tr:hover td{background:#f8f9fa}
+.lag-b{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;color:#fff}
+
+/* FINDINGS */
+.findings{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+.fc{border-radius:8px;padding:16px;border-left:4px solid}
+.fc h4{font-size:13px;font-weight:700;margin-bottom:8px}
+.fc ul{padding-left:16px}
+.fc li{font-size:13px;line-height:1.7;color:#444;margin-bottom:4px}
+.fc-bl{background:#e3f2fd;border-color:#1565c0}.fc-bl h4{color:#0d47a1}
+.fc-gn{background:#e8f5e9;border-color:#2e7d32}.fc-gn h4{color:#1b5e20}
+.fc-or{background:#fff3e0;border-color:#e65100}.fc-or h4{color:#bf360c}
+.fc-pu{background:#f3e5f5;border-color:#6a1b9a}.fc-pu h4{color:#4a148c}
+
+.warn-box{background:#fff8e1;border:1px solid #ffcc02;border-radius:8px;padding:14px 16px;
+  margin-top:16px;font-size:13px;color:#5d4037;line-height:1.7}
+.warn-box strong{color:#e65100}
+
+/* TOOLTIP */
+.tooltip{position:fixed;background:rgba(33,33,33,.92);color:#fff;padding:8px 12px;
+  border-radius:6px;font-size:12px;line-height:1.5;pointer-events:none;opacity:0;
+  transition:opacity .15s;z-index:999}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>セクターローテーション Granger因果分析<br>RS / RRS / BP 指標 比較レポート</h1>
+  <p class="sub">3つの市場指標（RSパーセンタイル・RRSパーセンタイル・BPパーセンタイル）を用いて、<br>
+  11セクター間の先行・遅行関係を週次・月次タイムスケールで統計的に検証した。</p>
+  <div class="chips">
+    <span class="chip">📅 分析期間 2005〜2026年</span>
+    <span class="chip">📊 米国株 11セクター</span>
+    <span class="chip">🔬 Granger因果検定</span>
+    <span class="chip">📈 週次（最大4ヶ月）・月次（最大1年）</span>
+    <span class="chip">⚙️ 3指標 × 2頻度 = 6パターン検証</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ① 分析概要 -->
+<div class="section">
+  <div class="section-header">
+    <h2>① 分析の概要</h2>
+    <div class="desc">何を・どのように検証したか</div>
+  </div>
+  <div class="section-body">
+    <div class="method-row">
+      <div class="mcrd mc-blue">
+        <h4>📐 Granger因果検定とは</h4>
+        <p>「Aの過去データを加えるとBの予測精度が有意に向上するか」を統計的に検定（F検定、p&lt;0.05）。真の因果ではなく<strong>統計的先行関係</strong>を検出する手法。</p>
+      </div>
+      <div class="mcrd mc-green">
+        <h4>📊 3つの指標</h4>
+        <p><strong>RS</strong>（Relative Strength）: セクター内株の相対強度パーセンタイル<br>
+        <strong>RRS</strong>（β除去RS）: 市場全体の動きを除いたRS<br>
+        <strong>BP</strong>（Buy Pressure）: 買い圧力パーセンタイル</p>
+      </div>
+      <div class="mcrd mc-orange">
+        <h4>📅 週次・月次の意味</h4>
+        <p>日次データのlag=1日は短期ノイズの可能性。<strong>週次（5日平均）</strong>と<strong>月次（月末値）</strong>にリサンプリングし、本来のセクターローテーション（週〜月単位）を捉える。</p>
+      </div>
+    </div>
+    <div style="background:#f8f9fa;border-radius:7px;padding:14px 16px;font-size:12px;color:#455a64;line-height:1.8">
+      <strong>検定条件：</strong>
+      週次 — 学習窓5年(260週)・最大ラグ16週 / 月次 — 学習窓10年(120ヶ月)・最大ラグ12ヶ月 ／
+      有意水準p&lt;0.05 ／ ローリング学習（週次:2010〜2026年=17回、月次:2015〜2026年=12回）
+    </div>
+  </div>
+</div>
+
+<!-- ② 比較サマリー -->
+<div class="section">
+  <div class="section-header">
+    <h2>② 3指標 × 週次・月次 比較サマリー</h2>
+    <div class="desc">有意ペア数・F統計量・ラグ分布から見た各指標の特徴</div>
+  </div>
+  <div class="section-body">
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th rowspan="2" style="vertical-align:middle">指標</th>
+          <th colspan="4" style="background:#1565c0;border-bottom:1px solid #0d47a1">週次（学習5年・最大ラグ16週）</th>
+          <th colspan="4" style="background:#6a1b9a;border-bottom:1px solid #4a148c">月次（学習10年・最大ラグ12ヶ月）</th>
+        </tr>
+        <tr>
+          <th style="background:#1976d2">有意ペア≥5yr</th>
+          <th style="background:#1976d2">うちF≥10</th>
+          <th style="background:#1976d2">≥8年安定</th>
+          <th style="background:#1976d2">lag=1の割合</th>
+          <th style="background:#7b1fa2">有意ペア≥5yr</th>
+          <th style="background:#7b1fa2">うちF≥10</th>
+          <th style="background:#7b1fa2">≥8年安定</th>
+          <th style="background:#7b1fa2">lag=1の割合</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>RS_pct</td>
+          <td><span class="best">41</span></td>
+          <td>8</td>
+          <td>11</td>
+          <td>61%</td>
+          <td>17</td>
+          <td>6</td>
+          <td>6</td>
+          <td>47%</td>
+        </tr>
+        <tr>
+          <td>RRS_pct<br><small class="note-cell">※月次注意</small></td>
+          <td>29</td>
+          <td>9</td>
+          <td>8</td>
+          <td>48%</td>
+          <td><span class="best">34</span> <small class="note-cell">※</small></td>
+          <td><span class="best">19</span></td>
+          <td>7</td>
+          <td>41%</td>
+        </tr>
+        <tr>
+          <td>BP_pct</td>
+          <td><span class="best">54</span></td>
+          <td><span class="best">16</span></td>
+          <td><span class="best">14</span></td>
+          <td>54%</td>
+          <td>25</td>
+          <td>9</td>
+          <td><span class="best">10</span></td>
+          <td>48%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn-box" style="margin-top:16px">
+      <strong>⚠️ RRS月次の注意点：</strong>
+      RRSは市場共通因子（ベータ）を除去した指標のため、景気サイクル後半（2024〜2026年）に市場構造が変化した際、多数のペアが一時的に有意となった（2024年は64/110ペア、2026年は90/110ペアが有意）。
+      この急増は構造的変化よりも<strong>市場レジーム変化による一時的な相関増加</strong>の可能性があり、解釈に注意が必要。
+    </div>
+
+    <div class="warn-box" style="margin-top:10px;background:#e8f5e9;border-color:#4caf50">
+      <strong>✅ BP週次の注目点：</strong>
+      BPパーセンタイル（買い圧力）は週次で<strong>54ペア（全110の49%）</strong>が5年以上有意と最多。
+      買い圧力は価格変動より先行するセクター間伝播が多く、RSより「生の資金フロー」を捉えていると考えられる。
+    </div>
+  </div>
+</div>
+
+<!-- ③/④/⑤ RS（相対強度パーセンタイル） -->
+<div class="metric-section">
+  <div class="metric-header" style="background:#1565c0">
+    <h3>③ RS（相対強度パーセンタイル）</h3>
+    <span class="metric-badge">各セクター内の株の相対的な強さ（RS）をパーセンタイル化。市場全体の動きも含む。…</span>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('rs','w',this)">📅 週次（最大16週先行）</button>
+    <button class="tab-btn" onclick="switchTab('rs','m',this)">📆 月次（最大12ヶ月先行）</button>
+  </div>
+
+  <!-- 週次 tab -->
+  <div class="tab-pane active" id="rs-w-pane">
+    <p style="font-size:12px;color:#78909c;margin-bottom:14px">週次：学習5年・最大16週ラグ・2010〜2026年</p>
+    <div id="rs-w-stats" class="stats-row"></div>
+    <div class="net-ctrl">
+      <label>最低出現年数：</label>
+      <input type="range" id="rs-w-slider" min="5" max="12" value="5" step="1"
+        oninput="document.getElementById('rs-w-sv').textContent=this.value; renderNet('rs','w')">
+      <span class="cv" id="rs-w-sv">5</span>年以上
+      &nbsp;|&nbsp;
+      <label>ラグ番号：</label>
+      <input type="checkbox" id="rs-w-lag" checked onchange="renderNet('rs','w')"> 表示
+    </div>
+    <div class="net-wrap">
+      <svg id="rs-w-net" width="540" height="500"></svg>
+      <div class="legend-box">
+        <h4>矢印の色（最大F値）</h4>
+        <div class="li"><div class="ll" style="background:#90a4ae"></div>F &lt; 5</div>
+        <div class="li"><div class="ll" style="background:#f39c12"></div>F 5〜8</div>
+        <div class="li"><div class="ll" style="background:#e74c3c"></div>F 8〜12</div>
+        <div class="li"><div class="ll" style="background:#8e44ad"></div>F 12〜18</div>
+        <div class="li"><div class="ll" style="background:#1a237e"></div>F ≥ 18</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>矢印の太さ（出現年数）</h4>
+        <div class="li"><div class="ll" style="height:1px;background:#37474f"></div>5年</div>
+        <div class="li"><div class="ll" style="height:3px;background:#37474f"></div>8年</div>
+        <div class="li"><div class="ll" style="height:5px;background:#37474f"></div>12年+</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>ラグ数字（単位：週）</h4>
+        <div style="font-size:11px;color:#78909c">矢印中央の数字 = 最頻ラグ</div>
+        <div class="edge-box" id="rs-w-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルを当てると詳細</div></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ラグ行列（単位：週）— 出現3年以上を表示</h4>
+    <p style="font-size:11px;color:#78909c;margin-bottom:8px">行=先行セクター / 列=遅行セクター ／ 色：青=短ラグ・赤=長ラグ</p>
+    <div class="hm-wrap"><table class="hm" id="rs-w-hm"></table></div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ペア一覧（出現5年以上）</h4>
+    <table class="pt"><thead><tr><th>#</th><th>先行セクター</th><th>遅行セクター</th><th>出現年数</th><th>最頻ラグ</th><th>最大F値</th></tr></thead>
+    <tbody id="rs-w-tbody"></tbody></table>
+  </div>
+
+  <!-- 月次 tab -->
+  <div class="tab-pane" id="rs-m-pane">
+    <p style="font-size:12px;color:#78909c;margin-bottom:14px">月次：学習10年・最大12ヶ月ラグ・2015〜2026年</p>
+    <div id="rs-m-stats" class="stats-row"></div>
+    <div class="net-ctrl">
+      <label>最低出現年数：</label>
+      <input type="range" id="rs-m-slider" min="3" max="12" value="5" step="1"
+        oninput="document.getElementById('rs-m-sv').textContent=this.value; renderNet('rs','m')">
+      <span class="cv" id="rs-m-sv">5</span>年以上
+      &nbsp;|&nbsp;
+      <label>ラグ番号：</label>
+      <input type="checkbox" id="rs-m-lag" checked onchange="renderNet('rs','m')"> 表示
+    </div>
+    <div class="net-wrap">
+      <svg id="rs-m-net" width="540" height="500"></svg>
+      <div class="legend-box">
+        <h4>矢印の色（最大F値）</h4>
+        <div class="li"><div class="ll" style="background:#90a4ae"></div>F &lt; 5</div>
+        <div class="li"><div class="ll" style="background:#f39c12"></div>F 5〜8</div>
+        <div class="li"><div class="ll" style="background:#e74c3c"></div>F 8〜12</div>
+        <div class="li"><div class="ll" style="background:#8e44ad"></div>F 12〜18</div>
+        <div class="li"><div class="ll" style="background:#1a237e"></div>F ≥ 18</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>矢印の太さ（出現年数）</h4>
+        <div class="li"><div class="ll" style="height:1px;background:#37474f"></div>3年</div>
+        <div class="li"><div class="ll" style="height:3px;background:#37474f"></div>6年</div>
+        <div class="li"><div class="ll" style="height:5px;background:#37474f"></div>12年+</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>ラグ数字（単位：ヶ月）</h4>
+        <div style="font-size:11px;color:#78909c">矢印中央の数字 = 最頻ラグ</div>
+        <div class="edge-box" id="rs-m-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルを当てると詳細</div></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ラグ行列（単位：ヶ月）— 出現3年以上を表示</h4>
+    <p style="font-size:11px;color:#78909c;margin-bottom:8px">行=先行セクター / 列=遅行セクター ／ 色：青=短ラグ・赤=長ラグ</p>
+    <div class="hm-wrap"><table class="hm" id="rs-m-hm"></table></div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ペア一覧（出現5年以上）</h4>
+    <table class="pt"><thead><tr><th>#</th><th>先行セクター</th><th>遅行セクター</th><th>出現年数</th><th>最頻ラグ</th><th>最大F値</th></tr></thead>
+    <tbody id="rs-m-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- ③/④/⑤ RRS（β除去相対強度パーセンタイル） -->
+<div class="metric-section">
+  <div class="metric-header" style="background:#6a1b9a">
+    <h3>④ RRS（β除去相対強度パーセンタイル）</h3>
+    <span class="metric-badge">市場全体（β）の動きを除いたRS。セクター固有の強さを捉えるが、クロスセクター因…</span>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('rrs','w',this)">📅 週次（最大16週先行）</button>
+    <button class="tab-btn" onclick="switchTab('rrs','m',this)">📆 月次（最大12ヶ月先行）</button>
+  </div>
+
+  <!-- 週次 tab -->
+  <div class="tab-pane active" id="rrs-w-pane">
+    <p style="font-size:12px;color:#78909c;margin-bottom:14px">週次：学習5年・最大16週ラグ・2010〜2026年</p>
+    <div id="rrs-w-stats" class="stats-row"></div>
+    <div class="net-ctrl">
+      <label>最低出現年数：</label>
+      <input type="range" id="rrs-w-slider" min="5" max="12" value="5" step="1"
+        oninput="document.getElementById('rrs-w-sv').textContent=this.value; renderNet('rrs','w')">
+      <span class="cv" id="rrs-w-sv">5</span>年以上
+      &nbsp;|&nbsp;
+      <label>ラグ番号：</label>
+      <input type="checkbox" id="rrs-w-lag" checked onchange="renderNet('rrs','w')"> 表示
+    </div>
+    <div class="net-wrap">
+      <svg id="rrs-w-net" width="540" height="500"></svg>
+      <div class="legend-box">
+        <h4>矢印の色（最大F値）</h4>
+        <div class="li"><div class="ll" style="background:#90a4ae"></div>F &lt; 5</div>
+        <div class="li"><div class="ll" style="background:#f39c12"></div>F 5〜8</div>
+        <div class="li"><div class="ll" style="background:#e74c3c"></div>F 8〜12</div>
+        <div class="li"><div class="ll" style="background:#8e44ad"></div>F 12〜18</div>
+        <div class="li"><div class="ll" style="background:#1a237e"></div>F ≥ 18</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>矢印の太さ（出現年数）</h4>
+        <div class="li"><div class="ll" style="height:1px;background:#37474f"></div>5年</div>
+        <div class="li"><div class="ll" style="height:3px;background:#37474f"></div>8年</div>
+        <div class="li"><div class="ll" style="height:5px;background:#37474f"></div>12年+</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>ラグ数字（単位：週）</h4>
+        <div style="font-size:11px;color:#78909c">矢印中央の数字 = 最頻ラグ</div>
+        <div class="edge-box" id="rrs-w-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルを当てると詳細</div></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ラグ行列（単位：週）— 出現3年以上を表示</h4>
+    <p style="font-size:11px;color:#78909c;margin-bottom:8px">行=先行セクター / 列=遅行セクター ／ 色：青=短ラグ・赤=長ラグ</p>
+    <div class="hm-wrap"><table class="hm" id="rrs-w-hm"></table></div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ペア一覧（出現5年以上）</h4>
+    <table class="pt"><thead><tr><th>#</th><th>先行セクター</th><th>遅行セクター</th><th>出現年数</th><th>最頻ラグ</th><th>最大F値</th></tr></thead>
+    <tbody id="rrs-w-tbody"></tbody></table>
+  </div>
+
+  <!-- 月次 tab -->
+  <div class="tab-pane" id="rrs-m-pane">
+    <p style="font-size:12px;color:#78909c;margin-bottom:14px">月次：学習10年・最大12ヶ月ラグ・2015〜2026年 ※2024〜2026年の急増に注意</p>
+    <div id="rrs-m-stats" class="stats-row"></div>
+    <div class="net-ctrl">
+      <label>最低出現年数：</label>
+      <input type="range" id="rrs-m-slider" min="3" max="12" value="5" step="1"
+        oninput="document.getElementById('rrs-m-sv').textContent=this.value; renderNet('rrs','m')">
+      <span class="cv" id="rrs-m-sv">5</span>年以上
+      &nbsp;|&nbsp;
+      <label>ラグ番号：</label>
+      <input type="checkbox" id="rrs-m-lag" checked onchange="renderNet('rrs','m')"> 表示
+    </div>
+    <div class="net-wrap">
+      <svg id="rrs-m-net" width="540" height="500"></svg>
+      <div class="legend-box">
+        <h4>矢印の色（最大F値）</h4>
+        <div class="li"><div class="ll" style="background:#90a4ae"></div>F &lt; 5</div>
+        <div class="li"><div class="ll" style="background:#f39c12"></div>F 5〜8</div>
+        <div class="li"><div class="ll" style="background:#e74c3c"></div>F 8〜12</div>
+        <div class="li"><div class="ll" style="background:#8e44ad"></div>F 12〜18</div>
+        <div class="li"><div class="ll" style="background:#1a237e"></div>F ≥ 18</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>矢印の太さ（出現年数）</h4>
+        <div class="li"><div class="ll" style="height:1px;background:#37474f"></div>3年</div>
+        <div class="li"><div class="ll" style="height:3px;background:#37474f"></div>6年</div>
+        <div class="li"><div class="ll" style="height:5px;background:#37474f"></div>12年+</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>ラグ数字（単位：ヶ月）</h4>
+        <div style="font-size:11px;color:#78909c">矢印中央の数字 = 最頻ラグ</div>
+        <div class="edge-box" id="rrs-m-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルを当てると詳細</div></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ラグ行列（単位：ヶ月）— 出現3年以上を表示</h4>
+    <p style="font-size:11px;color:#78909c;margin-bottom:8px">行=先行セクター / 列=遅行セクター ／ 色：青=短ラグ・赤=長ラグ</p>
+    <div class="hm-wrap"><table class="hm" id="rrs-m-hm"></table></div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ペア一覧（出現5年以上）</h4>
+    <table class="pt"><thead><tr><th>#</th><th>先行セクター</th><th>遅行セクター</th><th>出現年数</th><th>最頻ラグ</th><th>最大F値</th></tr></thead>
+    <tbody id="rrs-m-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- ③/④/⑤ BP（買い圧力パーセンタイル） -->
+<div class="metric-section">
+  <div class="metric-header" style="background:#2e7d32">
+    <h3>⑤ BP（買い圧力パーセンタイル）</h3>
+    <span class="metric-badge">各セクターの「買い圧力」をパーセンタイル化（ランクから換算）。価格より先行する資…</span>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('bp','w',this)">📅 週次（最大16週先行）</button>
+    <button class="tab-btn" onclick="switchTab('bp','m',this)">📆 月次（最大12ヶ月先行）</button>
+  </div>
+
+  <!-- 週次 tab -->
+  <div class="tab-pane active" id="bp-w-pane">
+    <p style="font-size:12px;color:#78909c;margin-bottom:14px">週次：学習5年・最大16週ラグ・2010〜2026年</p>
+    <div id="bp-w-stats" class="stats-row"></div>
+    <div class="net-ctrl">
+      <label>最低出現年数：</label>
+      <input type="range" id="bp-w-slider" min="5" max="12" value="5" step="1"
+        oninput="document.getElementById('bp-w-sv').textContent=this.value; renderNet('bp','w')">
+      <span class="cv" id="bp-w-sv">5</span>年以上
+      &nbsp;|&nbsp;
+      <label>ラグ番号：</label>
+      <input type="checkbox" id="bp-w-lag" checked onchange="renderNet('bp','w')"> 表示
+    </div>
+    <div class="net-wrap">
+      <svg id="bp-w-net" width="540" height="500"></svg>
+      <div class="legend-box">
+        <h4>矢印の色（最大F値）</h4>
+        <div class="li"><div class="ll" style="background:#90a4ae"></div>F &lt; 5</div>
+        <div class="li"><div class="ll" style="background:#f39c12"></div>F 5〜8</div>
+        <div class="li"><div class="ll" style="background:#e74c3c"></div>F 8〜12</div>
+        <div class="li"><div class="ll" style="background:#8e44ad"></div>F 12〜18</div>
+        <div class="li"><div class="ll" style="background:#1a237e"></div>F ≥ 18</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>矢印の太さ（出現年数）</h4>
+        <div class="li"><div class="ll" style="height:1px;background:#37474f"></div>5年</div>
+        <div class="li"><div class="ll" style="height:3px;background:#37474f"></div>8年</div>
+        <div class="li"><div class="ll" style="height:5px;background:#37474f"></div>12年+</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>ラグ数字（単位：週）</h4>
+        <div style="font-size:11px;color:#78909c">矢印中央の数字 = 最頻ラグ</div>
+        <div class="edge-box" id="bp-w-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルを当てると詳細</div></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ラグ行列（単位：週）— 出現3年以上を表示</h4>
+    <p style="font-size:11px;color:#78909c;margin-bottom:8px">行=先行セクター / 列=遅行セクター ／ 色：青=短ラグ・赤=長ラグ</p>
+    <div class="hm-wrap"><table class="hm" id="bp-w-hm"></table></div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ペア一覧（出現5年以上）</h4>
+    <table class="pt"><thead><tr><th>#</th><th>先行セクター</th><th>遅行セクター</th><th>出現年数</th><th>最頻ラグ</th><th>最大F値</th></tr></thead>
+    <tbody id="bp-w-tbody"></tbody></table>
+  </div>
+
+  <!-- 月次 tab -->
+  <div class="tab-pane" id="bp-m-pane">
+    <p style="font-size:12px;color:#78909c;margin-bottom:14px">月次：学習10年・最大12ヶ月ラグ・2015〜2026年</p>
+    <div id="bp-m-stats" class="stats-row"></div>
+    <div class="net-ctrl">
+      <label>最低出現年数：</label>
+      <input type="range" id="bp-m-slider" min="3" max="12" value="5" step="1"
+        oninput="document.getElementById('bp-m-sv').textContent=this.value; renderNet('bp','m')">
+      <span class="cv" id="bp-m-sv">5</span>年以上
+      &nbsp;|&nbsp;
+      <label>ラグ番号：</label>
+      <input type="checkbox" id="bp-m-lag" checked onchange="renderNet('bp','m')"> 表示
+    </div>
+    <div class="net-wrap">
+      <svg id="bp-m-net" width="540" height="500"></svg>
+      <div class="legend-box">
+        <h4>矢印の色（最大F値）</h4>
+        <div class="li"><div class="ll" style="background:#90a4ae"></div>F &lt; 5</div>
+        <div class="li"><div class="ll" style="background:#f39c12"></div>F 5〜8</div>
+        <div class="li"><div class="ll" style="background:#e74c3c"></div>F 8〜12</div>
+        <div class="li"><div class="ll" style="background:#8e44ad"></div>F 12〜18</div>
+        <div class="li"><div class="ll" style="background:#1a237e"></div>F ≥ 18</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>矢印の太さ（出現年数）</h4>
+        <div class="li"><div class="ll" style="height:1px;background:#37474f"></div>3年</div>
+        <div class="li"><div class="ll" style="height:3px;background:#37474f"></div>6年</div>
+        <div class="li"><div class="ll" style="height:5px;background:#37474f"></div>12年+</div>
+        <hr class="dv" style="margin:10px 0">
+        <h4>ラグ数字（単位：ヶ月）</h4>
+        <div style="font-size:11px;color:#78909c">矢印中央の数字 = 最頻ラグ</div>
+        <div class="edge-box" id="bp-m-info"><div style="color:#90a4ae;font-size:11px">矢印にカーソルを当てると詳細</div></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ラグ行列（単位：ヶ月）— 出現3年以上を表示</h4>
+    <p style="font-size:11px;color:#78909c;margin-bottom:8px">行=先行セクター / 列=遅行セクター ／ 色：青=短ラグ・赤=長ラグ</p>
+    <div class="hm-wrap"><table class="hm" id="bp-m-hm"></table></div>
+    <hr class="dv">
+    <h4 style="font-size:13px;font-weight:700;color:#455a64;margin-bottom:8px">ペア一覧（出現5年以上）</h4>
+    <table class="pt"><thead><tr><th>#</th><th>先行セクター</th><th>遅行セクター</th><th>出現年数</th><th>最頻ラグ</th><th>最大F値</th></tr></thead>
+    <tbody id="bp-m-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- ⑥ 主要発見 -->
+<div class="section">
+  <div class="section-header">
+    <h2>⑥ 主要な発見と解釈</h2>
+    <div class="desc">3指標の比較から得られた知見</div>
+  </div>
+  <div class="section-body">
+    <div class="findings">
+      <div class="fc fc-bl">
+        <h4>📊 指標別の特徴</h4>
+        <ul>
+          <li><strong>RS（週次）</strong>：41ペア有意。景気サイクル的な先行関係を最もクリアに捉える。Consumer Defensive → Utilities（12年）など代表的パターンが安定</li>
+          <li><strong>BP（週次）</strong>：54ペアと最多。価格より先行する資金フローの観点からセクター間伝播を捉える。F≥10も16ペアと最も多い</li>
+          <li><strong>RRS（週次）</strong>：29ペアと最少。市場因子除去によりクロスセクター因果が弱まるが、セクター固有の動きは検出</li>
+        </ul>
+      </div>
+      <div class="fc fc-gn">
+        <h4>🔄 3指標共通の安定ペア（週次）</h4>
+        <ul>
+          <li><strong>Healthcare → 複数セクター</strong>：RS・RRS・BP すべてで Healthcare が先行セクターとして登場</li>
+          <li><strong>Utilities → Real Estate</strong>：RS・BP 週次で共通して登場（lag=1週）</li>
+          <li><strong>Energy → Healthcare</strong>：RS・RRS・BP 月次すべてで登場（lag=2ヶ月）</li>
+          <li>複数指標で共通するペアほど構造的・安定的な先行関係と解釈できる</li>
+        </ul>
+      </div>
+      <div class="fc fc-or">
+        <h4>📅 ラグ別の解釈</h4>
+        <ul>
+          <li><strong>週次 lag=1週</strong>：全指標で最多（48〜61%）。「今週強いセクターが翌週影響を与える」。実用的なタイムスケール</li>
+          <li><strong>月次 lag=2ヶ月</strong>：RS・BP で複数登場。景気サイクルを反映した本来のセクターローテーション的ラグ</li>
+          <li><strong>月次 lag=5〜8ヶ月</strong>：RRS で一部登場。β除去後の長期構造的関係を示す可能性</li>
+        </ul>
+      </div>
+      <div class="fc fc-pu">
+        <h4>💡 実用への示唆</h4>
+        <ul>
+          <li><strong>BP週次</strong>：最も多くのシグナルを提供。「買い圧力の伝播」を先行指標として活用</li>
+          <li><strong>RS月次・lag=2ヶ月</strong>：セクターETF（XLV・XLU・XLE等）の中期リバランスに適用可能</li>
+          <li>3指標すべてで有意なペアを絞り込むことで、ノイズを排除した高信頼シグナルが得られる</li>
+          <li>RRS月次は2024〜2026年の急増があり、現時点では実運用に慎重な評価が必要</li>
+        </ul>
+      </div>
+    </div>
+    <div style="background:#f8f9fa;border-radius:7px;padding:14px 16px;margin-top:16px;font-size:12px;color:#636e72;line-height:1.7">
+      <strong>注意：</strong>Granger因果は統計的先行関係であり、経済的因果関係を保証しない。過去の安定性が将来の有効性を保証しない。
+      複数指標・複数タイムスケールで確認されたペアほど信頼性が高いと考えられるが、実運用では追加検証が必要。
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+<div class="tooltip" id="tt"></div>
+
+<script>
+const DATA = {"sectors": ["Basic Materials", "Communication Services", "Consumer Cyclical", "Consumer Defensive", "Energy", "Financial Services", "Healthcare", "Industrials", "Real Estate", "Technology", "Utilities"], "short": {"Basic Materials": "Basic Mat.", "Communication Services": "Comm.Svcs", "Consumer Cyclical": "Cons.Cyc.", "Consumer Defensive": "Cons.Def.", "Energy": "Energy", "Financial Services": "Fin.Svcs", "Healthcare": "Healthcare", "Industrials": "Industrials", "Real Estate": "Real Est.", "Technology": "Technology", "Utilities": "Utilities"}, "rs_w_links": [{"source": "Consumer Defensive", "target": "Utilities", "years": 12, "fstat": 4.9, "fmax": 11.26, "lag": 1}, {"source": "Communication Services", "target": "Technology", "years": 10, "fstat": 3.96, "fmax": 9.81, "lag": 1}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 10, "fstat": 3.13, "fmax": 9.05, "lag": 1}, {"source": "Healthcare", "target": "Consumer Cyclical", "years": 9, "fstat": 4.32, "fmax": 9.64, "lag": 1}, {"source": "Real Estate", "target": "Financial Services", "years": 9, "fstat": 3.35, "fmax": 10.64, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 9, "fstat": 5.79, "fmax": 14.08, "lag": 1}, {"source": "Energy", "target": "Consumer Cyclical", "years": 8, "fstat": 2.94, "fmax": 6.32, "lag": 1}, {"source": "Basic Materials", "target": "Financial Services", "years": 8, "fstat": 4.38, "fmax": 14.58, "lag": 1}, {"source": "Technology", "target": "Real Estate", "years": 8, "fstat": 2.47, "fmax": 5.31, "lag": 1}, {"source": "Healthcare", "target": "Financial Services", "years": 8, "fstat": 2.13, "fmax": 3.43, "lag": 4}, {"source": "Utilities", "target": "Financial Services", "years": 8, "fstat": 5.38, "fmax": 14.29, "lag": 1}, {"source": "Consumer Cyclical", "target": "Financial Services", "years": 7, "fstat": 3.06, "fmax": 10.23, "lag": 1}, {"source": "Energy", "target": "Utilities", "years": 7, "fstat": 2.96, "fmax": 8.95, "lag": 1}, {"source": "Utilities", "target": "Basic Materials", "years": 7, "fstat": 2.45, "fmax": 6.15, "lag": 1}, {"source": "Consumer Cyclical", "target": "Technology", "years": 7, "fstat": 2.67, "fmax": 5.12, "lag": 1}, {"source": "Utilities", "target": "Technology", "years": 7, "fstat": 2.61, "fmax": 5.95, "lag": 2}, {"source": "Communication Services", "target": "Basic Materials", "years": 6, "fstat": 2.84, "fmax": 5.41, "lag": 1}, {"source": "Basic Materials", "target": "Communication Services", "years": 6, "fstat": 1.74, "fmax": 4.18, "lag": 8}, {"source": "Utilities", "target": "Healthcare", "years": 6, "fstat": 3.05, "fmax": 8.95, "lag": 1}, {"source": "Energy", "target": "Financial Services", "years": 6, "fstat": 2.77, "fmax": 9.71, "lag": 1}, {"source": "Energy", "target": "Industrials", "years": 6, "fstat": 1.88, "fmax": 2.96, "lag": 6}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 6, "fstat": 2.48, "fmax": 5.14, "lag": 5}, {"source": "Real Estate", "target": "Basic Materials", "years": 6, "fstat": 1.72, "fmax": 2.6, "lag": 7}, {"source": "Real Estate", "target": "Industrials", "years": 6, "fstat": 2.55, "fmax": 6.14, "lag": 3}, {"source": "Technology", "target": "Consumer Cyclical", "years": 6, "fstat": 3.66, "fmax": 9.52, "lag": 1}, {"source": "Healthcare", "target": "Utilities", "years": 5, "fstat": 2.37, "fmax": 7.59, "lag": 1}, {"source": "Communication Services", "target": "Financial Services", "years": 5, "fstat": 3.1, "fmax": 7.61, "lag": 1}, {"source": "Consumer Cyclical", "target": "Real Estate", "years": 5, "fstat": 2.23, "fmax": 4.68, "lag": 2}, {"source": "Consumer Cyclical", "target": "Communication Services", "years": 5, "fstat": 3.23, "fmax": 8.67, "lag": 2}, {"source": "Healthcare", "target": "Communication Services", "years": 5, "fstat": 2.15, "fmax": 4.31, "lag": 3}, {"source": "Financial Services", "target": "Utilities", "years": 5, "fstat": 2.06, "fmax": 5.32, "lag": 5}, {"source": "Utilities", "target": "Consumer Defensive", "years": 5, "fstat": 1.97, "fmax": 4.25, "lag": 6}, {"source": "Industrials", "target": "Consumer Cyclical", "years": 5, "fstat": 2.29, "fmax": 3.91, "lag": 6}, {"source": "Consumer Defensive", "target": "Energy", "years": 5, "fstat": 2.0, "fmax": 5.06, "lag": 1}, {"source": "Consumer Defensive", "target": "Industrials", "years": 5, "fstat": 1.94, "fmax": 3.13, "lag": 2}, {"source": "Consumer Defensive", "target": "Real Estate", "years": 5, "fstat": 2.88, "fmax": 7.11, "lag": 1}, {"source": "Basic Materials", "target": "Utilities", "years": 5, "fstat": 2.2, "fmax": 4.24, "lag": 2}, {"source": "Financial Services", "target": "Basic Materials", "years": 5, "fstat": 1.77, "fmax": 4.08, "lag": 1}, {"source": "Energy", "target": "Basic Materials", "years": 5, "fstat": 2.6, "fmax": 6.86, "lag": 1}, {"source": "Industrials", "target": "Consumer Defensive", "years": 5, "fstat": 2.14, "fmax": 6.58, "lag": 1}, {"source": "Industrials", "target": "Healthcare", "years": 5, "fstat": 1.72, "fmax": 3.17, "lag": 4}], "rs_w_links3": [{"source": "Consumer Defensive", "target": "Utilities", "years": 12, "fstat": 4.9, "fmax": 11.26, "lag": 1}, {"source": "Communication Services", "target": "Technology", "years": 10, "fstat": 3.96, "fmax": 9.81, "lag": 1}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 10, "fstat": 3.13, "fmax": 9.05, "lag": 1}, {"source": "Healthcare", "target": "Consumer Cyclical", "years": 9, "fstat": 4.32, "fmax": 9.64, "lag": 1}, {"source": "Real Estate", "target": "Financial Services", "years": 9, "fstat": 3.35, "fmax": 10.64, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 9, "fstat": 5.79, "fmax": 14.08, "lag": 1}, {"source": "Energy", "target": "Consumer Cyclical", "years": 8, "fstat": 2.94, "fmax": 6.32, "lag": 1}, {"source": "Basic Materials", "target": "Financial Services", "years": 8, "fstat": 4.38, "fmax": 14.58, "lag": 1}, {"source": "Technology", "target": "Real Estate", "years": 8, "fstat": 2.47, "fmax": 5.31, "lag": 1}, {"source": "Healthcare", "target": "Financial Services", "years": 8, "fstat": 2.13, "fmax": 3.43, "lag": 4}, {"source": "Utilities", "target": "Financial Services", "years": 8, "fstat": 5.38, "fmax": 14.29, "lag": 1}, {"source": "Consumer Cyclical", "target": "Financial Services", "years": 7, "fstat": 3.06, "fmax": 10.23, "lag": 1}, {"source": "Energy", "target": "Utilities", "years": 7, "fstat": 2.96, "fmax": 8.95, "lag": 1}, {"source": "Utilities", "target": "Basic Materials", "years": 7, "fstat": 2.45, "fmax": 6.15, "lag": 1}, {"source": "Consumer Cyclical", "target": "Technology", "years": 7, "fstat": 2.67, "fmax": 5.12, "lag": 1}, {"source": "Utilities", "target": "Technology", "years": 7, "fstat": 2.61, "fmax": 5.95, "lag": 2}, {"source": "Energy", "target": "Financial Services", "years": 6, "fstat": 2.77, "fmax": 9.71, "lag": 1}, {"source": "Communication Services", "target": "Basic Materials", "years": 6, "fstat": 2.84, "fmax": 5.41, "lag": 1}, {"source": "Basic Materials", "target": "Communication Services", "years": 6, "fstat": 1.74, "fmax": 4.18, "lag": 8}, {"source": "Utilities", "target": "Healthcare", "years": 6, "fstat": 3.05, "fmax": 8.95, "lag": 1}, {"source": "Real Estate", "target": "Industrials", "years": 6, "fstat": 2.55, "fmax": 6.14, "lag": 3}, {"source": "Energy", "target": "Industrials", "years": 6, "fstat": 1.88, "fmax": 2.96, "lag": 6}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 6, "fstat": 2.48, "fmax": 5.14, "lag": 5}, {"source": "Technology", "target": "Consumer Cyclical", "years": 6, "fstat": 3.66, "fmax": 9.52, "lag": 1}, {"source": "Real Estate", "target": "Basic Materials", "years": 6, "fstat": 1.72, "fmax": 2.6, "lag": 7}, {"source": "Industrials", "target": "Healthcare", "years": 5, "fstat": 1.72, "fmax": 3.17, "lag": 4}, {"source": "Communication Services", "target": "Financial Services", "years": 5, "fstat": 3.1, "fmax": 7.61, "lag": 1}, {"source": "Consumer Cyclical", "target": "Real Estate", "years": 5, "fstat": 2.23, "fmax": 4.68, "lag": 2}, {"source": "Consumer Cyclical", "target": "Communication Services", "years": 5, "fstat": 3.23, "fmax": 8.67, "lag": 2}, {"source": "Healthcare", "target": "Utilities", "years": 5, "fstat": 2.37, "fmax": 7.59, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 5, "fstat": 2.06, "fmax": 5.32, "lag": 5}, {"source": "Utilities", "target": "Consumer Defensive", "years": 5, "fstat": 1.97, "fmax": 4.25, "lag": 6}, {"source": "Healthcare", "target": "Communication Services", "years": 5, "fstat": 2.15, "fmax": 4.31, "lag": 3}, {"source": "Consumer Defensive", "target": "Energy", "years": 5, "fstat": 2.0, "fmax": 5.06, "lag": 1}, {"source": "Consumer Defensive", "target": "Industrials", "years": 5, "fstat": 1.94, "fmax": 3.13, "lag": 2}, {"source": "Consumer Defensive", "target": "Real Estate", "years": 5, "fstat": 2.88, "fmax": 7.11, "lag": 1}, {"source": "Basic Materials", "target": "Utilities", "years": 5, "fstat": 2.2, "fmax": 4.24, "lag": 2}, {"source": "Financial Services", "target": "Basic Materials", "years": 5, "fstat": 1.77, "fmax": 4.08, "lag": 1}, {"source": "Energy", "target": "Basic Materials", "years": 5, "fstat": 2.6, "fmax": 6.86, "lag": 1}, {"source": "Industrials", "target": "Consumer Defensive", "years": 5, "fstat": 2.14, "fmax": 6.58, "lag": 1}, {"source": "Industrials", "target": "Consumer Cyclical", "years": 5, "fstat": 2.29, "fmax": 3.91, "lag": 6}, {"source": "Basic Materials", "target": "Energy", "years": 4, "fstat": 2.37, "fmax": 5.43, "lag": 1}, {"source": "Healthcare", "target": "Industrials", "years": 4, "fstat": 1.73, "fmax": 3.77, "lag": 2}, {"source": "Communication Services", "target": "Energy", "years": 4, "fstat": 2.98, "fmax": 9.24, "lag": 1}, {"source": "Energy", "target": "Consumer Defensive", "years": 4, "fstat": 2.19, "fmax": 3.75, "lag": 2}, {"source": "Technology", "target": "Consumer Defensive", "years": 4, "fstat": 1.93, "fmax": 4.38, "lag": 5}, {"source": "Basic Materials", "target": "Technology", "years": 4, "fstat": 2.35, "fmax": 5.33, "lag": 1}, {"source": "Basic Materials", "target": "Healthcare", "years": 4, "fstat": 1.84, "fmax": 3.15, "lag": 4}, {"source": "Real Estate", "target": "Technology", "years": 4, "fstat": 2.08, "fmax": 6.38, "lag": 1}, {"source": "Technology", "target": "Healthcare", "years": 4, "fstat": 2.28, "fmax": 5.85, "lag": 2}, {"source": "Real Estate", "target": "Healthcare", "years": 4, "fstat": 1.67, "fmax": 3.75, "lag": 2}, {"source": "Energy", "target": "Real Estate", "years": 4, "fstat": 1.98, "fmax": 4.64, "lag": 1}, {"source": "Communication Services", "target": "Industrials", "years": 4, "fstat": 2.19, "fmax": 5.91, "lag": 1}, {"source": "Financial Services", "target": "Energy", "years": 4, "fstat": 1.97, "fmax": 3.53, "lag": 13}, {"source": "Consumer Cyclical", "target": "Energy", "years": 4, "fstat": 2.03, "fmax": 6.58, "lag": 2}, {"source": "Real Estate", "target": "Communication Services", "years": 4, "fstat": 2.73, "fmax": 10.88, "lag": 3}, {"source": "Energy", "target": "Healthcare", "years": 4, "fstat": 2.4, "fmax": 6.4, "lag": 3}, {"source": "Healthcare", "target": "Energy", "years": 3, "fstat": 1.75, "fmax": 3.56, "lag": 8}, {"source": "Consumer Defensive", "target": "Technology", "years": 3, "fstat": 2.08, "fmax": 4.26, "lag": 1}, {"source": "Consumer Cyclical", "target": "Basic Materials", "years": 3, "fstat": 2.54, "fmax": 5.9, "lag": 1}, {"source": "Financial Services", "target": "Industrials", "years": 3, "fstat": 1.44, "fmax": 2.57, "lag": 5}, {"source": "Communication Services", "target": "Healthcare", "years": 3, "fstat": 1.83, "fmax": 6.31, "lag": 1}, {"source": "Energy", "target": "Technology", "years": 3, "fstat": 2.04, "fmax": 5.01, "lag": 1}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 3, "fstat": 1.57, "fmax": 4.64, "lag": 15}, {"source": "Industrials", "target": "Basic Materials", "years": 3, "fstat": 1.49, "fmax": 4.04, "lag": 1}, {"source": "Financial Services", "target": "Healthcare", "years": 3, "fstat": 1.99, "fmax": 4.13, "lag": 4}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 3, "fstat": 2.15, "fmax": 3.75, "lag": 7}, {"source": "Healthcare", "target": "Technology", "years": 3, "fstat": 2.25, "fmax": 6.85, "lag": 1}, {"source": "Industrials", "target": "Financial Services", "years": 3, "fstat": 1.64, "fmax": 5.58, "lag": 1}, {"source": "Real Estate", "target": "Consumer Cyclical", "years": 3, "fstat": 1.6, "fmax": 4.13, "lag": 1}, {"source": "Technology", "target": "Communication Services", "years": 3, "fstat": 1.55, "fmax": 2.58, "lag": 6}, {"source": "Industrials", "target": "Energy", "years": 3, "fstat": 2.01, "fmax": 4.45, "lag": 1}, {"source": "Financial Services", "target": "Communication Services", "years": 3, "fstat": 1.87, "fmax": 3.51, "lag": 15}], "rs_w_matrix": [{"cause": "Consumer Defensive", "effect": "Utilities", "lag": 1, "years": 12, "fmax": 11.26}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "lag": 1, "years": 10, "fmax": 9.05}, {"cause": "Communication Services", "effect": "Technology", "lag": 1, "years": 10, "fmax": 9.81}, {"cause": "Healthcare", "effect": "Consumer Cyclical", "lag": 1, "years": 9, "fmax": 9.64}, {"cause": "Real Estate", "effect": "Financial Services", "lag": 1, "years": 9, "fmax": 10.64}, {"cause": "Utilities", "effect": "Real Estate", "lag": 1, "years": 9, "fmax": 14.08}, {"cause": "Utilities", "effect": "Financial Services", "lag": 1, "years": 8, "fmax": 14.29}, {"cause": "Healthcare", "effect": "Financial Services", "lag": 4, "years": 8, "fmax": 3.43}, {"cause": "Energy", "effect": "Consumer Cyclical", "lag": 1, "years": 8, "fmax": 6.32}, {"cause": "Basic Materials", "effect": "Financial Services", "lag": 1, "years": 8, "fmax": 14.58}, {"cause": "Technology", "effect": "Real Estate", "lag": 1, "years": 8, "fmax": 5.31}, {"cause": "Consumer Cyclical", "effect": "Financial Services", "lag": 1, "years": 7, "fmax": 10.23}, {"cause": "Energy", "effect": "Utilities", "lag": 1, "years": 7, "fmax": 8.95}, {"cause": "Utilities", "effect": "Basic Materials", "lag": 1, "years": 7, "fmax": 6.15}, {"cause": "Consumer Cyclical", "effect": "Technology", "lag": 1, "years": 7, "fmax": 5.12}, {"cause": "Utilities", "effect": "Technology", "lag": 2, "years": 7, "fmax": 5.95}, {"cause": "Real Estate", "effect": "Industrials", "lag": 3, "years": 6, "fmax": 6.14}, {"cause": "Real Estate", "effect": "Basic Materials", "lag": 7, "years": 6, "fmax": 2.6}, {"cause": "Technology", "effect": "Consumer Cyclical", "lag": 1, "years": 6, "fmax": 9.52}, {"cause": "Utilities", "effect": "Consumer Cyclical", "lag": 5, "years": 6, "fmax": 5.14}, {"cause": "Energy", "effect": "Industrials", "lag": 6, "years": 6, "fmax": 2.96}, {"cause": "Energy", "effect": "Financial Services", "lag": 1, "years": 6, "fmax": 9.71}, {"cause": "Utilities", "effect": "Healthcare", "lag": 1, "years": 6, "fmax": 8.95}, {"cause": "Basic Materials", "effect": "Communication Services", "lag": 8, "years": 6, "fmax": 4.18}, {"cause": "Communication Services", "effect": "Basic Materials", "lag": 1, "years": 6, "fmax": 5.41}, {"cause": "Industrials", "effect": "Consumer Defensive", "lag": 1, "years": 5, "fmax": 6.58}, {"cause": "Energy", "effect": "Basic Materials", "lag": 1, "years": 5, "fmax": 6.86}, {"cause": "Financial Services", "effect": "Basic Materials", "lag": 1, "years": 5, "fmax": 4.08}, {"cause": "Basic Materials", "effect": "Utilities", "lag": 2, "years": 5, "fmax": 4.24}, {"cause": "Consumer Defensive", "effect": "Real Estate", "lag": 1, "years": 5, "fmax": 7.11}, {"cause": "Consumer Defensive", "effect": "Industrials", "lag": 2, "years": 5, "fmax": 3.13}, {"cause": "Industrials", "effect": "Consumer Cyclical", "lag": 6, "years": 5, "fmax": 3.91}, {"cause": "Consumer Defensive", "effect": "Energy", "lag": 1, "years": 5, "fmax": 5.06}, {"cause": "Healthcare", "effect": "Utilities", "lag": 1, "years": 5, "fmax": 7.59}, {"cause": "Utilities", "effect": "Consumer Defensive", "lag": 6, "years": 5, "fmax": 4.25}, {"cause": "Financial Services", "effect": "Utilities", "lag": 5, "years": 5, "fmax": 5.32}, {"cause": "Healthcare", "effect": "Communication Services", "lag": 3, "years": 5, "fmax": 4.31}, {"cause": "Consumer Cyclical", "effect": "Communication Services", "lag": 2, "years": 5, "fmax": 8.67}, {"cause": "Consumer Cyclical", "effect": "Real Estate", "lag": 2, "years": 5, "fmax": 4.68}, {"cause": "Communication Services", "effect": "Financial Services", "lag": 1, "years": 5, "fmax": 7.61}, {"cause": "Industrials", "effect": "Healthcare", "lag": 4, "years": 5, "fmax": 3.17}, {"cause": "Real Estate", "effect": "Communication Services", "lag": 3, "years": 4, "fmax": 10.88}, {"cause": "Consumer Cyclical", "effect": "Energy", "lag": 2, "years": 4, "fmax": 6.58}, {"cause": "Financial Services", "effect": "Energy", "lag": 13, "years": 4, "fmax": 3.53}, {"cause": "Communication Services", "effect": "Industrials", "lag": 1, "years": 4, "fmax": 5.91}, {"cause": "Energy", "effect": "Real Estate", "lag": 1, "years": 4, "fmax": 4.64}, {"cause": "Real Estate", "effect": "Healthcare", "lag": 2, "years": 4, "fmax": 3.75}, {"cause": "Energy", "effect": "Healthcare", "lag": 3, "years": 4, "fmax": 6.4}, {"cause": "Technology", "effect": "Healthcare", "lag": 2, "years": 4, "fmax": 5.85}, {"cause": "Basic Materials", "effect": "Energy", "lag": 1, "years": 4, "fmax": 5.43}, {"cause": "Basic Materials", "effect": "Healthcare", "lag": 4, "years": 4, "fmax": 3.15}, {"cause": "Basic Materials", "effect": "Technology", "lag": 1, "years": 4, "fmax": 5.33}, {"cause": "Technology", "effect": "Consumer Defensive", "lag": 5, "years": 4, "fmax": 4.38}, {"cause": "Real Estate", "effect": "Technology", "lag": 1, "years": 4, "fmax": 6.38}, {"cause": "Energy", "effect": "Consumer Defensive", "lag": 2, "years": 4, "fmax": 3.75}, {"cause": "Communication Services", "effect": "Energy", "lag": 1, "years": 4, "fmax": 9.24}, {"cause": "Healthcare", "effect": "Industrials", "lag": 2, "years": 4, "fmax": 3.77}, {"cause": "Industrials", "effect": "Energy", "lag": 1, "years": 3, "fmax": 4.45}, {"cause": "Technology", "effect": "Communication Services", "lag": 6, "years": 3, "fmax": 2.58}, {"cause": "Real Estate", "effect": "Consumer Cyclical", "lag": 1, "years": 3, "fmax": 4.13}, {"cause": "Industrials", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 5.58}, {"cause": "Industrials", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 4.04}, {"cause": "Healthcare", "effect": "Technology", "lag": 1, "years": 3, "fmax": 6.85}, {"cause": "Basic Materials", "effect": "Consumer Defensive", "lag": 7, "years": 3, "fmax": 3.75}, {"cause": "Financial Services", "effect": "Healthcare", "lag": 4, "years": 3, "fmax": 4.13}, {"cause": "Healthcare", "effect": "Energy", "lag": 8, "years": 3, "fmax": 3.56}, {"cause": "Consumer Defensive", "effect": "Basic Materials", "lag": 15, "years": 3, "fmax": 4.64}, {"cause": "Energy", "effect": "Technology", "lag": 1, "years": 3, "fmax": 5.01}, {"cause": "Communication Services", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 6.31}, {"cause": "Financial Services", "effect": "Industrials", "lag": 5, "years": 3, "fmax": 2.57}, {"cause": "Consumer Cyclical", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 5.9}, {"cause": "Consumer Defensive", "effect": "Technology", "lag": 1, "years": 3, "fmax": 4.26}, {"cause": "Financial Services", "effect": "Communication Services", "lag": 15, "years": 3, "fmax": 3.51}], "rs_m_links": [{"source": "Healthcare", "target": "Consumer Cyclical", "years": 12, "fstat": 8.42, "fmax": 11.44, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 10, "fstat": 5.75, "fmax": 10.95, "lag": 1}, {"source": "Consumer Defensive", "target": "Utilities", "years": 9, "fstat": 4.19, "fmax": 7.65, "lag": 2}, {"source": "Financial Services", "target": "Energy", "years": 8, "fstat": 3.71, "fmax": 6.52, "lag": 2}, {"source": "Real Estate", "target": "Communication Services", "years": 8, "fstat": 4.7, "fmax": 10.47, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 8, "fstat": 5.27, "fmax": 10.17, "lag": 2}, {"source": "Utilities", "target": "Basic Materials", "years": 7, "fstat": 4.09, "fmax": 6.61, "lag": 1}, {"source": "Technology", "target": "Communication Services", "years": 7, "fstat": 2.28, "fmax": 4.52, "lag": 5}, {"source": "Utilities", "target": "Financial Services", "years": 7, "fstat": 4.43, "fmax": 8.21, "lag": 1}, {"source": "Communication Services", "target": "Energy", "years": 7, "fstat": 4.58, "fmax": 10.89, "lag": 1}, {"source": "Healthcare", "target": "Energy", "years": 7, "fstat": 3.42, "fmax": 4.79, "lag": 2}, {"source": "Financial Services", "target": "Basic Materials", "years": 7, "fstat": 2.44, "fmax": 3.81, "lag": 5}, {"source": "Energy", "target": "Utilities", "years": 6, "fstat": 4.19, "fmax": 8.68, "lag": 1}, {"source": "Energy", "target": "Basic Materials", "years": 5, "fstat": 2.36, "fmax": 4.63, "lag": 5}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 5, "fstat": 2.34, "fmax": 4.11, "lag": 3}, {"source": "Communication Services", "target": "Industrials", "years": 5, "fstat": 2.05, "fmax": 5.07, "lag": 8}, {"source": "Consumer Defensive", "target": "Financial Services", "years": 5, "fstat": 3.08, "fmax": 4.17, "lag": 1}], "rs_m_links3": [{"source": "Healthcare", "target": "Consumer Cyclical", "years": 12, "fstat": 8.42, "fmax": 11.44, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 10, "fstat": 5.75, "fmax": 10.95, "lag": 1}, {"source": "Consumer Defensive", "target": "Utilities", "years": 9, "fstat": 4.19, "fmax": 7.65, "lag": 2}, {"source": "Financial Services", "target": "Energy", "years": 8, "fstat": 3.71, "fmax": 6.52, "lag": 2}, {"source": "Real Estate", "target": "Communication Services", "years": 8, "fstat": 4.7, "fmax": 10.47, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 8, "fstat": 5.27, "fmax": 10.17, "lag": 2}, {"source": "Utilities", "target": "Basic Materials", "years": 7, "fstat": 4.09, "fmax": 6.61, "lag": 1}, {"source": "Technology", "target": "Communication Services", "years": 7, "fstat": 2.28, "fmax": 4.52, "lag": 5}, {"source": "Utilities", "target": "Financial Services", "years": 7, "fstat": 4.43, "fmax": 8.21, "lag": 1}, {"source": "Communication Services", "target": "Energy", "years": 7, "fstat": 4.58, "fmax": 10.89, "lag": 1}, {"source": "Healthcare", "target": "Energy", "years": 7, "fstat": 3.42, "fmax": 4.79, "lag": 2}, {"source": "Financial Services", "target": "Basic Materials", "years": 7, "fstat": 2.44, "fmax": 3.81, "lag": 5}, {"source": "Energy", "target": "Utilities", "years": 6, "fstat": 4.19, "fmax": 8.68, "lag": 1}, {"source": "Energy", "target": "Basic Materials", "years": 5, "fstat": 2.36, "fmax": 4.63, "lag": 5}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 5, "fstat": 2.34, "fmax": 4.11, "lag": 3}, {"source": "Communication Services", "target": "Industrials", "years": 5, "fstat": 2.05, "fmax": 5.07, "lag": 8}, {"source": "Consumer Defensive", "target": "Financial Services", "years": 5, "fstat": 3.08, "fmax": 4.17, "lag": 1}, {"source": "Energy", "target": "Communication Services", "years": 4, "fstat": 2.19, "fmax": 5.14, "lag": 1}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 4, "fstat": 2.79, "fmax": 6.3, "lag": 1}, {"source": "Energy", "target": "Industrials", "years": 4, "fstat": 2.64, "fmax": 3.88, "lag": 3}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 4, "fstat": 3.79, "fmax": 10.67, "lag": 1}, {"source": "Industrials", "target": "Technology", "years": 4, "fstat": 1.91, "fmax": 3.35, "lag": 5}, {"source": "Consumer Cyclical", "target": "Communication Services", "years": 4, "fstat": 2.46, "fmax": 3.64, "lag": 3}, {"source": "Healthcare", "target": "Basic Materials", "years": 3, "fstat": 2.65, "fmax": 5.03, "lag": 1}, {"source": "Consumer Defensive", "target": "Technology", "years": 3, "fstat": 1.88, "fmax": 7.35, "lag": 2}, {"source": "Energy", "target": "Consumer Cyclical", "years": 3, "fstat": 2.78, "fmax": 6.66, "lag": 1}, {"source": "Healthcare", "target": "Consumer Defensive", "years": 3, "fstat": 2.37, "fmax": 4.11, "lag": 1}, {"source": "Energy", "target": "Financial Services", "years": 3, "fstat": 1.96, "fmax": 3.73, "lag": 2}, {"source": "Real Estate", "target": "Technology", "years": 3, "fstat": 2.34, "fmax": 4.37, "lag": 1}, {"source": "Communication Services", "target": "Basic Materials", "years": 3, "fstat": 2.58, "fmax": 4.36, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 3, "fstat": 3.34, "fmax": 6.71, "lag": 1}, {"source": "Real Estate", "target": "Basic Materials", "years": 3, "fstat": 1.77, "fmax": 3.73, "lag": 2}, {"source": "Real Estate", "target": "Consumer Cyclical", "years": 3, "fstat": 2.41, "fmax": 3.19, "lag": 3}, {"source": "Real Estate", "target": "Financial Services", "years": 3, "fstat": 2.55, "fmax": 4.97, "lag": 1}, {"source": "Technology", "target": "Healthcare", "years": 3, "fstat": 2.73, "fmax": 6.64, "lag": 1}, {"source": "Technology", "target": "Basic Materials", "years": 3, "fstat": 2.99, "fmax": 7.32, "lag": 1}, {"source": "Communication Services", "target": "Consumer Defensive", "years": 3, "fstat": 2.74, "fmax": 6.54, "lag": 1}], "rs_m_matrix": [{"cause": "Healthcare", "effect": "Consumer Cyclical", "lag": 1, "years": 12, "fmax": 11.44}, {"cause": "Healthcare", "effect": "Communication Services", "lag": 1, "years": 10, "fmax": 10.95}, {"cause": "Consumer Defensive", "effect": "Utilities", "lag": 2, "years": 9, "fmax": 7.65}, {"cause": "Financial Services", "effect": "Energy", "lag": 2, "years": 8, "fmax": 6.52}, {"cause": "Real Estate", "effect": "Communication Services", "lag": 1, "years": 8, "fmax": 10.47}, {"cause": "Energy", "effect": "Healthcare", "lag": 2, "years": 8, "fmax": 10.17}, {"cause": "Financial Services", "effect": "Basic Materials", "lag": 5, "years": 7, "fmax": 3.81}, {"cause": "Healthcare", "effect": "Energy", "lag": 2, "years": 7, "fmax": 4.79}, {"cause": "Communication Services", "effect": "Energy", "lag": 1, "years": 7, "fmax": 10.89}, {"cause": "Utilities", "effect": "Basic Materials", "lag": 1, "years": 7, "fmax": 6.61}, {"cause": "Utilities", "effect": "Financial Services", "lag": 1, "years": 7, "fmax": 8.21}, {"cause": "Technology", "effect": "Communication Services", "lag": 5, "years": 7, "fmax": 4.52}, {"cause": "Energy", "effect": "Utilities", "lag": 1, "years": 6, "fmax": 8.68}, {"cause": "Energy", "effect": "Basic Materials", "lag": 5, "years": 5, "fmax": 4.63}, {"cause": "Communication Services", "effect": "Consumer Cyclical", "lag": 3, "years": 5, "fmax": 4.11}, {"cause": "Communication Services", "effect": "Industrials", "lag": 8, "years": 5, "fmax": 5.07}, {"cause": "Consumer Defensive", "effect": "Financial Services", "lag": 1, "years": 5, "fmax": 4.17}, {"cause": "Consumer Cyclical", "effect": "Communication Services", "lag": 3, "years": 4, "fmax": 3.64}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "lag": 1, "years": 4, "fmax": 10.67}, {"cause": "Industrials", "effect": "Technology", "lag": 5, "years": 4, "fmax": 3.35}, {"cause": "Energy", "effect": "Communication Services", "lag": 1, "years": 4, "fmax": 5.14}, {"cause": "Energy", "effect": "Industrials", "lag": 3, "years": 4, "fmax": 3.88}, {"cause": "Basic Materials", "effect": "Consumer Defensive", "lag": 1, "years": 4, "fmax": 6.3}, {"cause": "Healthcare", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 5.03}, {"cause": "Consumer Defensive", "effect": "Technology", "lag": 2, "years": 3, "fmax": 7.35}, {"cause": "Energy", "effect": "Consumer Cyclical", "lag": 1, "years": 3, "fmax": 6.66}, {"cause": "Healthcare", "effect": "Consumer Defensive", "lag": 1, "years": 3, "fmax": 4.11}, {"cause": "Energy", "effect": "Financial Services", "lag": 2, "years": 3, "fmax": 3.73}, {"cause": "Real Estate", "effect": "Technology", "lag": 1, "years": 3, "fmax": 4.37}, {"cause": "Communication Services", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 4.36}, {"cause": "Utilities", "effect": "Real Estate", "lag": 1, "years": 3, "fmax": 6.71}, {"cause": "Real Estate", "effect": "Basic Materials", "lag": 2, "years": 3, "fmax": 3.73}, {"cause": "Real Estate", "effect": "Consumer Cyclical", "lag": 3, "years": 3, "fmax": 3.19}, {"cause": "Real Estate", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 4.97}, {"cause": "Technology", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 6.64}, {"cause": "Technology", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 7.32}, {"cause": "Communication Services", "effect": "Consumer Defensive", "lag": 1, "years": 3, "fmax": 6.54}], "rrs_w_links": [{"source": "Financial Services", "target": "Real Estate", "years": 9, "fstat": 3.12, "fmax": 7.54, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 9, "fstat": 3.76, "fmax": 11.2, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 9, "fstat": 3.11, "fmax": 7.92, "lag": 1}, {"source": "Consumer Defensive", "target": "Energy", "years": 8, "fstat": 3.39, "fmax": 8.89, "lag": 1}, {"source": "Technology", "target": "Healthcare", "years": 8, "fstat": 2.31, "fmax": 6.44, "lag": 3}, {"source": "Healthcare", "target": "Industrials", "years": 8, "fstat": 3.6, "fmax": 11.52, "lag": 1}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 8, "fstat": 1.93, "fmax": 2.96, "lag": 5}, {"source": "Consumer Cyclical", "target": "Energy", "years": 8, "fstat": 3.14, "fmax": 9.06, "lag": 1}, {"source": "Industrials", "target": "Consumer Defensive", "years": 7, "fstat": 2.59, "fmax": 3.94, "lag": 4}, {"source": "Communication Services", "target": "Consumer Defensive", "years": 7, "fstat": 2.55, "fmax": 7.66, "lag": 1}, {"source": "Energy", "target": "Consumer Defensive", "years": 7, "fstat": 3.15, "fmax": 11.01, "lag": 3}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 7, "fstat": 2.37, "fmax": 10.39, "lag": 5}, {"source": "Financial Services", "target": "Technology", "years": 7, "fstat": 2.24, "fmax": 4.43, "lag": 6}, {"source": "Financial Services", "target": "Consumer Cyclical", "years": 7, "fstat": 3.27, "fmax": 9.5, "lag": 1}, {"source": "Industrials", "target": "Technology", "years": 7, "fstat": 2.38, "fmax": 5.02, "lag": 2}, {"source": "Utilities", "target": "Technology", "years": 7, "fstat": 2.53, "fmax": 6.28, "lag": 1}, {"source": "Industrials", "target": "Utilities", "years": 6, "fstat": 2.08, "fmax": 4.06, "lag": 5}, {"source": "Industrials", "target": "Communication Services", "years": 6, "fstat": 1.68, "fmax": 3.43, "lag": 10}, {"source": "Communication Services", "target": "Basic Materials", "years": 6, "fstat": 2.12, "fmax": 4.1, "lag": 3}, {"source": "Healthcare", "target": "Energy", "years": 6, "fstat": 3.04, "fmax": 11.86, "lag": 1}, {"source": "Communication Services", "target": "Healthcare", "years": 6, "fstat": 3.02, "fmax": 9.75, "lag": 1}, {"source": "Consumer Defensive", "target": "Real Estate", "years": 6, "fstat": 2.83, "fmax": 7.04, "lag": 2}, {"source": "Utilities", "target": "Financial Services", "years": 6, "fstat": 2.06, "fmax": 5.34, "lag": 5}, {"source": "Basic Materials", "target": "Technology", "years": 6, "fstat": 2.25, "fmax": 4.61, "lag": 3}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fstat": 1.9, "fmax": 3.6, "lag": 6}, {"source": "Financial Services", "target": "Communication Services", "years": 5, "fstat": 2.8, "fmax": 11.55, "lag": 1}, {"source": "Real Estate", "target": "Communication Services", "years": 5, "fstat": 2.42, "fmax": 5.24, "lag": 2}, {"source": "Communication Services", "target": "Real Estate", "years": 5, "fstat": 2.94, "fmax": 9.78, "lag": 1}, {"source": "Consumer Defensive", "target": "Consumer Cyclical", "years": 5, "fstat": 2.05, "fmax": 4.72, "lag": 1}], "rrs_w_links3": [{"source": "Financial Services", "target": "Real Estate", "years": 9, "fstat": 3.12, "fmax": 7.54, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 9, "fstat": 3.76, "fmax": 11.2, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 9, "fstat": 3.11, "fmax": 7.92, "lag": 1}, {"source": "Consumer Defensive", "target": "Energy", "years": 8, "fstat": 3.39, "fmax": 8.89, "lag": 1}, {"source": "Technology", "target": "Healthcare", "years": 8, "fstat": 2.31, "fmax": 6.44, "lag": 3}, {"source": "Healthcare", "target": "Industrials", "years": 8, "fstat": 3.6, "fmax": 11.52, "lag": 1}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 8, "fstat": 1.93, "fmax": 2.96, "lag": 5}, {"source": "Consumer Cyclical", "target": "Energy", "years": 8, "fstat": 3.14, "fmax": 9.06, "lag": 1}, {"source": "Industrials", "target": "Consumer Defensive", "years": 7, "fstat": 2.59, "fmax": 3.94, "lag": 4}, {"source": "Communication Services", "target": "Consumer Defensive", "years": 7, "fstat": 2.55, "fmax": 7.66, "lag": 1}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 7, "fstat": 2.37, "fmax": 10.39, "lag": 5}, {"source": "Energy", "target": "Consumer Defensive", "years": 7, "fstat": 3.15, "fmax": 11.01, "lag": 3}, {"source": "Industrials", "target": "Technology", "years": 7, "fstat": 2.38, "fmax": 5.02, "lag": 2}, {"source": "Financial Services", "target": "Technology", "years": 7, "fstat": 2.24, "fmax": 4.43, "lag": 6}, {"source": "Financial Services", "target": "Consumer Cyclical", "years": 7, "fstat": 3.27, "fmax": 9.5, "lag": 1}, {"source": "Utilities", "target": "Technology", "years": 7, "fstat": 2.53, "fmax": 6.28, "lag": 1}, {"source": "Communication Services", "target": "Basic Materials", "years": 6, "fstat": 2.12, "fmax": 4.1, "lag": 3}, {"source": "Industrials", "target": "Utilities", "years": 6, "fstat": 2.08, "fmax": 4.06, "lag": 5}, {"source": "Industrials", "target": "Communication Services", "years": 6, "fstat": 1.68, "fmax": 3.43, "lag": 10}, {"source": "Healthcare", "target": "Energy", "years": 6, "fstat": 3.04, "fmax": 11.86, "lag": 1}, {"source": "Consumer Defensive", "target": "Real Estate", "years": 6, "fstat": 2.83, "fmax": 7.04, "lag": 2}, {"source": "Utilities", "target": "Financial Services", "years": 6, "fstat": 2.06, "fmax": 5.34, "lag": 5}, {"source": "Basic Materials", "target": "Technology", "years": 6, "fstat": 2.25, "fmax": 4.61, "lag": 3}, {"source": "Communication Services", "target": "Healthcare", "years": 6, "fstat": 3.02, "fmax": 9.75, "lag": 1}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fstat": 1.9, "fmax": 3.6, "lag": 6}, {"source": "Financial Services", "target": "Communication Services", "years": 5, "fstat": 2.8, "fmax": 11.55, "lag": 1}, {"source": "Real Estate", "target": "Communication Services", "years": 5, "fstat": 2.42, "fmax": 5.24, "lag": 2}, {"source": "Communication Services", "target": "Real Estate", "years": 5, "fstat": 2.94, "fmax": 9.78, "lag": 1}, {"source": "Consumer Defensive", "target": "Consumer Cyclical", "years": 5, "fstat": 2.05, "fmax": 4.72, "lag": 1}, {"source": "Healthcare", "target": "Technology", "years": 4, "fstat": 2.16, "fmax": 5.85, "lag": 13}, {"source": "Consumer Cyclical", "target": "Technology", "years": 4, "fstat": 2.18, "fmax": 4.22, "lag": 1}, {"source": "Real Estate", "target": "Consumer Cyclical", "years": 4, "fstat": 1.56, "fmax": 3.55, "lag": 8}, {"source": "Basic Materials", "target": "Communication Services", "years": 4, "fstat": 1.55, "fmax": 3.98, "lag": 6}, {"source": "Financial Services", "target": "Healthcare", "years": 4, "fstat": 2.35, "fmax": 6.08, "lag": 2}, {"source": "Consumer Cyclical", "target": "Real Estate", "years": 4, "fstat": 2.26, "fmax": 5.43, "lag": 1}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 4, "fstat": 2.21, "fmax": 5.53, "lag": 1}, {"source": "Consumer Cyclical", "target": "Financial Services", "years": 4, "fstat": 2.06, "fmax": 3.95, "lag": 2}, {"source": "Basic Materials", "target": "Healthcare", "years": 4, "fstat": 2.0, "fmax": 4.24, "lag": 2}, {"source": "Consumer Cyclical", "target": "Communication Services", "years": 4, "fstat": 2.55, "fmax": 7.29, "lag": 1}, {"source": "Communication Services", "target": "Technology", "years": 4, "fstat": 2.54, "fmax": 9.69, "lag": 1}, {"source": "Industrials", "target": "Financial Services", "years": 4, "fstat": 1.99, "fmax": 4.55, "lag": 2}, {"source": "Real Estate", "target": "Healthcare", "years": 4, "fstat": 1.63, "fmax": 5.03, "lag": 1}, {"source": "Real Estate", "target": "Technology", "years": 4, "fstat": 1.94, "fmax": 4.31, "lag": 1}, {"source": "Technology", "target": "Basic Materials", "years": 4, "fstat": 2.25, "fmax": 6.64, "lag": 1}, {"source": "Healthcare", "target": "Utilities", "years": 4, "fstat": 2.1, "fmax": 8.31, "lag": 1}, {"source": "Utilities", "target": "Communication Services", "years": 4, "fstat": 1.71, "fmax": 4.15, "lag": 14}, {"source": "Technology", "target": "Utilities", "years": 4, "fstat": 2.23, "fmax": 7.6, "lag": 1}, {"source": "Basic Materials", "target": "Consumer Cyclical", "years": 4, "fstat": 3.12, "fmax": 16.09, "lag": 1}, {"source": "Financial Services", "target": "Consumer Defensive", "years": 4, "fstat": 1.88, "fmax": 3.42, "lag": 6}, {"source": "Energy", "target": "Utilities", "years": 4, "fstat": 1.51, "fmax": 2.47, "lag": 10}, {"source": "Energy", "target": "Technology", "years": 4, "fstat": 2.69, "fmax": 8.64, "lag": 2}, {"source": "Energy", "target": "Industrials", "years": 4, "fstat": 1.71, "fmax": 4.18, "lag": 1}, {"source": "Healthcare", "target": "Basic Materials", "years": 4, "fstat": 1.96, "fmax": 4.62, "lag": 1}, {"source": "Consumer Defensive", "target": "Healthcare", "years": 3, "fstat": 1.88, "fmax": 5.51, "lag": 1}, {"source": "Industrials", "target": "Real Estate", "years": 3, "fstat": 1.23, "fmax": 2.58, "lag": 6}, {"source": "Financial Services", "target": "Basic Materials", "years": 3, "fstat": 1.86, "fmax": 5.21, "lag": 4}, {"source": "Consumer Defensive", "target": "Utilities", "years": 3, "fstat": 1.99, "fmax": 3.96, "lag": 2}, {"source": "Financial Services", "target": "Industrials", "years": 3, "fstat": 1.97, "fmax": 5.8, "lag": 3}, {"source": "Healthcare", "target": "Consumer Cyclical", "years": 3, "fstat": 2.08, "fmax": 8.85, "lag": 15}, {"source": "Consumer Defensive", "target": "Financial Services", "years": 3, "fstat": 1.85, "fmax": 4.5, "lag": 1}, {"source": "Financial Services", "target": "Energy", "years": 3, "fstat": 2.25, "fmax": 4.51, "lag": 1}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 3, "fstat": 1.52, "fmax": 3.06, "lag": 3}, {"source": "Consumer Cyclical", "target": "Utilities", "years": 3, "fstat": 1.93, "fmax": 5.17, "lag": 6}, {"source": "Consumer Cyclical", "target": "Industrials", "years": 3, "fstat": 1.6, "fmax": 3.94, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 3, "fstat": 2.12, "fmax": 3.73, "lag": 4}, {"source": "Real Estate", "target": "Utilities", "years": 3, "fstat": 1.59, "fmax": 3.16, "lag": 4}, {"source": "Utilities", "target": "Healthcare", "years": 3, "fstat": 1.7, "fmax": 3.65, "lag": 3}, {"source": "Basic Materials", "target": "Financial Services", "years": 3, "fstat": 1.96, "fmax": 7.69, "lag": 1}, {"source": "Basic Materials", "target": "Industrials", "years": 3, "fstat": 2.26, "fmax": 10.26, "lag": 1}, {"source": "Technology", "target": "Consumer Defensive", "years": 3, "fstat": 2.19, "fmax": 5.92, "lag": 2}, {"source": "Real Estate", "target": "Industrials", "years": 3, "fstat": 1.78, "fmax": 4.91, "lag": 5}, {"source": "Real Estate", "target": "Energy", "years": 3, "fstat": 1.46, "fmax": 2.3, "lag": 8}, {"source": "Communication Services", "target": "Energy", "years": 3, "fstat": 1.57, "fmax": 3.16, "lag": 2}, {"source": "Consumer Cyclical", "target": "Basic Materials", "years": 3, "fstat": 1.9, "fmax": 5.3, "lag": 13}, {"source": "Consumer Cyclical", "target": "Consumer Defensive", "years": 3, "fstat": 2.26, "fmax": 5.73, "lag": 1}, {"source": "Industrials", "target": "Basic Materials", "years": 3, "fstat": 2.05, "fmax": 4.23, "lag": 1}, {"source": "Real Estate", "target": "Basic Materials", "years": 3, "fstat": 2.18, "fmax": 8.42, "lag": 1}, {"source": "Healthcare", "target": "Consumer Defensive", "years": 3, "fstat": 1.74, "fmax": 3.94, "lag": 3}], "rrs_w_matrix": [{"cause": "Financial Services", "effect": "Real Estate", "lag": 1, "years": 9, "fmax": 7.54}, {"cause": "Financial Services", "effect": "Utilities", "lag": 1, "years": 9, "fmax": 7.92}, {"cause": "Healthcare", "effect": "Communication Services", "lag": 1, "years": 9, "fmax": 11.2}, {"cause": "Consumer Defensive", "effect": "Energy", "lag": 1, "years": 8, "fmax": 8.89}, {"cause": "Technology", "effect": "Healthcare", "lag": 3, "years": 8, "fmax": 6.44}, {"cause": "Healthcare", "effect": "Industrials", "lag": 1, "years": 8, "fmax": 11.52}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "lag": 5, "years": 8, "fmax": 2.96}, {"cause": "Consumer Cyclical", "effect": "Energy", "lag": 1, "years": 8, "fmax": 9.06}, {"cause": "Utilities", "effect": "Technology", "lag": 1, "years": 7, "fmax": 6.28}, {"cause": "Industrials", "effect": "Technology", "lag": 2, "years": 7, "fmax": 5.02}, {"cause": "Financial Services", "effect": "Consumer Cyclical", "lag": 1, "years": 7, "fmax": 9.5}, {"cause": "Financial Services", "effect": "Technology", "lag": 6, "years": 7, "fmax": 4.43}, {"cause": "Industrials", "effect": "Consumer Defensive", "lag": 4, "years": 7, "fmax": 3.94}, {"cause": "Energy", "effect": "Consumer Defensive", "lag": 3, "years": 7, "fmax": 11.01}, {"cause": "Communication Services", "effect": "Consumer Cyclical", "lag": 5, "years": 7, "fmax": 10.39}, {"cause": "Communication Services", "effect": "Consumer Defensive", "lag": 1, "years": 7, "fmax": 7.66}, {"cause": "Basic Materials", "effect": "Technology", "lag": 3, "years": 6, "fmax": 4.61}, {"cause": "Utilities", "effect": "Financial Services", "lag": 5, "years": 6, "fmax": 5.34}, {"cause": "Consumer Defensive", "effect": "Real Estate", "lag": 2, "years": 6, "fmax": 7.04}, {"cause": "Communication Services", "effect": "Healthcare", "lag": 1, "years": 6, "fmax": 9.75}, {"cause": "Healthcare", "effect": "Energy", "lag": 1, "years": 6, "fmax": 11.86}, {"cause": "Communication Services", "effect": "Basic Materials", "lag": 3, "years": 6, "fmax": 4.1}, {"cause": "Industrials", "effect": "Communication Services", "lag": 10, "years": 6, "fmax": 3.43}, {"cause": "Industrials", "effect": "Utilities", "lag": 5, "years": 6, "fmax": 4.06}, {"cause": "Utilities", "effect": "Consumer Cyclical", "lag": 6, "years": 5, "fmax": 3.6}, {"cause": "Financial Services", "effect": "Communication Services", "lag": 1, "years": 5, "fmax": 11.55}, {"cause": "Real Estate", "effect": "Communication Services", "lag": 2, "years": 5, "fmax": 5.24}, {"cause": "Communication Services", "effect": "Real Estate", "lag": 1, "years": 5, "fmax": 9.78}, {"cause": "Consumer Defensive", "effect": "Consumer Cyclical", "lag": 1, "years": 5, "fmax": 4.72}, {"cause": "Energy", "effect": "Industrials", "lag": 1, "years": 4, "fmax": 4.18}, {"cause": "Energy", "effect": "Technology", "lag": 2, "years": 4, "fmax": 8.64}, {"cause": "Energy", "effect": "Utilities", "lag": 10, "years": 4, "fmax": 2.47}, {"cause": "Financial Services", "effect": "Consumer Defensive", "lag": 6, "years": 4, "fmax": 3.42}, {"cause": "Basic Materials", "effect": "Consumer Cyclical", "lag": 1, "years": 4, "fmax": 16.09}, {"cause": "Technology", "effect": "Utilities", "lag": 1, "years": 4, "fmax": 7.6}, {"cause": "Utilities", "effect": "Communication Services", "lag": 14, "years": 4, "fmax": 4.15}, {"cause": "Healthcare", "effect": "Utilities", "lag": 1, "years": 4, "fmax": 8.31}, {"cause": "Technology", "effect": "Basic Materials", "lag": 1, "years": 4, "fmax": 6.64}, {"cause": "Healthcare", "effect": "Basic Materials", "lag": 1, "years": 4, "fmax": 4.62}, {"cause": "Real Estate", "effect": "Healthcare", "lag": 1, "years": 4, "fmax": 5.03}, {"cause": "Real Estate", "effect": "Technology", "lag": 1, "years": 4, "fmax": 4.31}, {"cause": "Healthcare", "effect": "Technology", "lag": 13, "years": 4, "fmax": 5.85}, {"cause": "Industrials", "effect": "Financial Services", "lag": 2, "years": 4, "fmax": 4.55}, {"cause": "Real Estate", "effect": "Consumer Cyclical", "lag": 8, "years": 4, "fmax": 3.55}, {"cause": "Basic Materials", "effect": "Communication Services", "lag": 6, "years": 4, "fmax": 3.98}, {"cause": "Financial Services", "effect": "Healthcare", "lag": 2, "years": 4, "fmax": 6.08}, {"cause": "Consumer Cyclical", "effect": "Technology", "lag": 1, "years": 4, "fmax": 4.22}, {"cause": "Basic Materials", "effect": "Consumer Defensive", "lag": 1, "years": 4, "fmax": 5.53}, {"cause": "Consumer Cyclical", "effect": "Financial Services", "lag": 2, "years": 4, "fmax": 3.95}, {"cause": "Basic Materials", "effect": "Healthcare", "lag": 2, "years": 4, "fmax": 4.24}, {"cause": "Consumer Cyclical", "effect": "Communication Services", "lag": 1, "years": 4, "fmax": 7.29}, {"cause": "Consumer Cyclical", "effect": "Real Estate", "lag": 1, "years": 4, "fmax": 5.43}, {"cause": "Communication Services", "effect": "Technology", "lag": 1, "years": 4, "fmax": 9.69}, {"cause": "Real Estate", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 8.42}, {"cause": "Industrials", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 4.23}, {"cause": "Consumer Cyclical", "effect": "Consumer Defensive", "lag": 1, "years": 3, "fmax": 5.73}, {"cause": "Consumer Cyclical", "effect": "Basic Materials", "lag": 13, "years": 3, "fmax": 5.3}, {"cause": "Communication Services", "effect": "Energy", "lag": 2, "years": 3, "fmax": 3.16}, {"cause": "Real Estate", "effect": "Energy", "lag": 8, "years": 3, "fmax": 2.3}, {"cause": "Real Estate", "effect": "Industrials", "lag": 5, "years": 3, "fmax": 4.91}, {"cause": "Real Estate", "effect": "Utilities", "lag": 4, "years": 3, "fmax": 3.16}, {"cause": "Technology", "effect": "Consumer Defensive", "lag": 2, "years": 3, "fmax": 5.92}, {"cause": "Basic Materials", "effect": "Industrials", "lag": 1, "years": 3, "fmax": 10.26}, {"cause": "Basic Materials", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 7.69}, {"cause": "Utilities", "effect": "Healthcare", "lag": 3, "years": 3, "fmax": 3.65}, {"cause": "Consumer Cyclical", "effect": "Industrials", "lag": 1, "years": 3, "fmax": 3.94}, {"cause": "Energy", "effect": "Healthcare", "lag": 4, "years": 3, "fmax": 3.73}, {"cause": "Industrials", "effect": "Real Estate", "lag": 6, "years": 3, "fmax": 2.58}, {"cause": "Financial Services", "effect": "Basic Materials", "lag": 4, "years": 3, "fmax": 5.21}, {"cause": "Consumer Defensive", "effect": "Utilities", "lag": 2, "years": 3, "fmax": 3.96}, {"cause": "Financial Services", "effect": "Industrials", "lag": 3, "years": 3, "fmax": 5.8}, {"cause": "Consumer Defensive", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 5.51}, {"cause": "Consumer Defensive", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 4.5}, {"cause": "Financial Services", "effect": "Energy", "lag": 1, "years": 3, "fmax": 4.51}, {"cause": "Consumer Defensive", "effect": "Basic Materials", "lag": 3, "years": 3, "fmax": 3.06}, {"cause": "Consumer Cyclical", "effect": "Utilities", "lag": 6, "years": 3, "fmax": 5.17}, {"cause": "Healthcare", "effect": "Consumer Cyclical", "lag": 15, "years": 3, "fmax": 8.85}, {"cause": "Healthcare", "effect": "Consumer Defensive", "lag": 3, "years": 3, "fmax": 3.94}], "rrs_m_links": [{"source": "Communication Services", "target": "Technology", "years": 9, "fstat": 4.41, "fmax": 7.53, "lag": 1}, {"source": "Basic Materials", "target": "Real Estate", "years": 9, "fstat": 3.06, "fmax": 6.19, "lag": 5}, {"source": "Real Estate", "target": "Basic Materials", "years": 9, "fstat": 2.65, "fmax": 4.34, "lag": 5}, {"source": "Industrials", "target": "Consumer Defensive", "years": 8, "fstat": 4.44, "fmax": 10.77, "lag": 1}, {"source": "Technology", "target": "Healthcare", "years": 8, "fstat": 10.28, "fmax": 37.63, "lag": 1}, {"source": "Real Estate", "target": "Industrials", "years": 8, "fstat": 4.88, "fmax": 12.72, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 8, "fstat": 4.07, "fmax": 9.97, "lag": 3}, {"source": "Healthcare", "target": "Real Estate", "years": 7, "fstat": 2.62, "fmax": 4.57, "lag": 6}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 7, "fstat": 5.7, "fmax": 19.02, "lag": 4}, {"source": "Communication Services", "target": "Basic Materials", "years": 7, "fstat": 3.58, "fmax": 5.38, "lag": 3}, {"source": "Consumer Cyclical", "target": "Basic Materials", "years": 7, "fstat": 3.62, "fmax": 6.76, "lag": 1}, {"source": "Healthcare", "target": "Industrials", "years": 7, "fstat": 3.79, "fmax": 9.28, "lag": 4}, {"source": "Energy", "target": "Financial Services", "years": 7, "fstat": 2.48, "fmax": 3.5, "lag": 2}, {"source": "Financial Services", "target": "Technology", "years": 6, "fstat": 3.35, "fmax": 7.81, "lag": 1}, {"source": "Healthcare", "target": "Basic Materials", "years": 6, "fstat": 3.09, "fmax": 8.35, "lag": 2}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 6, "fstat": 3.3, "fmax": 10.68, "lag": 3}, {"source": "Communication Services", "target": "Industrials", "years": 6, "fstat": 3.01, "fmax": 5.92, "lag": 1}, {"source": "Basic Materials", "target": "Healthcare", "years": 6, "fstat": 7.89, "fmax": 24.89, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 6, "fstat": 3.99, "fmax": 9.99, "lag": 1}, {"source": "Consumer Defensive", "target": "Consumer Cyclical", "years": 6, "fstat": 2.52, "fmax": 4.88, "lag": 1}, {"source": "Energy", "target": "Communication Services", "years": 6, "fstat": 2.39, "fmax": 3.85, "lag": 3}, {"source": "Real Estate", "target": "Financial Services", "years": 6, "fstat": 2.36, "fmax": 3.77, "lag": 2}, {"source": "Industrials", "target": "Technology", "years": 6, "fstat": 4.28, "fmax": 8.91, "lag": 1}, {"source": "Industrials", "target": "Communication Services", "years": 6, "fstat": 3.0, "fmax": 5.7, "lag": 1}, {"source": "Consumer Defensive", "target": "Energy", "years": 6, "fstat": 2.29, "fmax": 3.46, "lag": 6}, {"source": "Financial Services", "target": "Industrials", "years": 6, "fstat": 3.07, "fmax": 7.77, "lag": 1}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fstat": 2.74, "fmax": 6.71, "lag": 2}, {"source": "Industrials", "target": "Consumer Cyclical", "years": 5, "fstat": 2.88, "fmax": 8.44, "lag": 3}, {"source": "Financial Services", "target": "Energy", "years": 5, "fstat": 2.65, "fmax": 4.7, "lag": 3}, {"source": "Basic Materials", "target": "Financial Services", "years": 5, "fstat": 1.83, "fmax": 2.35, "lag": 11}, {"source": "Energy", "target": "Industrials", "years": 5, "fstat": 3.48, "fmax": 7.05, "lag": 2}, {"source": "Utilities", "target": "Industrials", "years": 5, "fstat": 2.39, "fmax": 4.47, "lag": 5}, {"source": "Industrials", "target": "Real Estate", "years": 5, "fstat": 2.42, "fmax": 5.29, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 5, "fstat": 2.0, "fmax": 3.02, "lag": 7}], "rrs_m_links3": [{"source": "Communication Services", "target": "Technology", "years": 9, "fstat": 4.41, "fmax": 7.53, "lag": 1}, {"source": "Basic Materials", "target": "Real Estate", "years": 9, "fstat": 3.06, "fmax": 6.19, "lag": 5}, {"source": "Real Estate", "target": "Basic Materials", "years": 9, "fstat": 2.65, "fmax": 4.34, "lag": 5}, {"source": "Industrials", "target": "Consumer Defensive", "years": 8, "fstat": 4.44, "fmax": 10.77, "lag": 1}, {"source": "Technology", "target": "Healthcare", "years": 8, "fstat": 10.28, "fmax": 37.63, "lag": 1}, {"source": "Real Estate", "target": "Industrials", "years": 8, "fstat": 4.88, "fmax": 12.72, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 8, "fstat": 4.07, "fmax": 9.97, "lag": 3}, {"source": "Healthcare", "target": "Real Estate", "years": 7, "fstat": 2.62, "fmax": 4.57, "lag": 6}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 7, "fstat": 5.7, "fmax": 19.02, "lag": 4}, {"source": "Communication Services", "target": "Basic Materials", "years": 7, "fstat": 3.58, "fmax": 5.38, "lag": 3}, {"source": "Consumer Cyclical", "target": "Basic Materials", "years": 7, "fstat": 3.62, "fmax": 6.76, "lag": 1}, {"source": "Healthcare", "target": "Industrials", "years": 7, "fstat": 3.79, "fmax": 9.28, "lag": 4}, {"source": "Energy", "target": "Financial Services", "years": 7, "fstat": 2.48, "fmax": 3.5, "lag": 2}, {"source": "Energy", "target": "Communication Services", "years": 6, "fstat": 2.39, "fmax": 3.85, "lag": 3}, {"source": "Healthcare", "target": "Basic Materials", "years": 6, "fstat": 3.09, "fmax": 8.35, "lag": 2}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 6, "fstat": 3.3, "fmax": 10.68, "lag": 3}, {"source": "Communication Services", "target": "Industrials", "years": 6, "fstat": 3.01, "fmax": 5.92, "lag": 1}, {"source": "Basic Materials", "target": "Healthcare", "years": 6, "fstat": 7.89, "fmax": 24.89, "lag": 1}, {"source": "Financial Services", "target": "Technology", "years": 6, "fstat": 3.35, "fmax": 7.81, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 6, "fstat": 3.99, "fmax": 9.99, "lag": 1}, {"source": "Real Estate", "target": "Financial Services", "years": 6, "fstat": 2.36, "fmax": 3.77, "lag": 2}, {"source": "Consumer Defensive", "target": "Consumer Cyclical", "years": 6, "fstat": 2.52, "fmax": 4.88, "lag": 1}, {"source": "Industrials", "target": "Technology", "years": 6, "fstat": 4.28, "fmax": 8.91, "lag": 1}, {"source": "Industrials", "target": "Communication Services", "years": 6, "fstat": 3.0, "fmax": 5.7, "lag": 1}, {"source": "Consumer Defensive", "target": "Energy", "years": 6, "fstat": 2.29, "fmax": 3.46, "lag": 6}, {"source": "Financial Services", "target": "Industrials", "years": 6, "fstat": 3.07, "fmax": 7.77, "lag": 1}, {"source": "Energy", "target": "Industrials", "years": 5, "fstat": 3.48, "fmax": 7.05, "lag": 2}, {"source": "Utilities", "target": "Real Estate", "years": 5, "fstat": 2.0, "fmax": 3.02, "lag": 7}, {"source": "Industrials", "target": "Real Estate", "years": 5, "fstat": 2.42, "fmax": 5.29, "lag": 1}, {"source": "Utilities", "target": "Industrials", "years": 5, "fstat": 2.39, "fmax": 4.47, "lag": 5}, {"source": "Basic Materials", "target": "Financial Services", "years": 5, "fstat": 1.83, "fmax": 2.35, "lag": 11}, {"source": "Financial Services", "target": "Energy", "years": 5, "fstat": 2.65, "fmax": 4.7, "lag": 3}, {"source": "Industrials", "target": "Consumer Cyclical", "years": 5, "fstat": 2.88, "fmax": 8.44, "lag": 3}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fstat": 2.74, "fmax": 6.71, "lag": 2}, {"source": "Consumer Defensive", "target": "Healthcare", "years": 4, "fstat": 2.94, "fmax": 7.9, "lag": 1}, {"source": "Utilities", "target": "Basic Materials", "years": 4, "fstat": 2.22, "fmax": 5.77, "lag": 4}, {"source": "Technology", "target": "Communication Services", "years": 4, "fstat": 3.56, "fmax": 11.04, "lag": 1}, {"source": "Communication Services", "target": "Financial Services", "years": 4, "fstat": 3.03, "fmax": 9.81, "lag": 10}, {"source": "Real Estate", "target": "Technology", "years": 4, "fstat": 2.44, "fmax": 4.9, "lag": 1}, {"source": "Communication Services", "target": "Consumer Defensive", "years": 4, "fstat": 2.91, "fmax": 5.2, "lag": 2}, {"source": "Basic Materials", "target": "Utilities", "years": 4, "fstat": 2.64, "fmax": 10.01, "lag": 1}, {"source": "Real Estate", "target": "Consumer Defensive", "years": 4, "fstat": 1.91, "fmax": 3.14, "lag": 3}, {"source": "Consumer Defensive", "target": "Utilities", "years": 4, "fstat": 2.21, "fmax": 8.36, "lag": 9}, {"source": "Real Estate", "target": "Communication Services", "years": 4, "fstat": 2.14, "fmax": 7.16, "lag": 3}, {"source": "Financial Services", "target": "Real Estate", "years": 4, "fstat": 2.9, "fmax": 7.3, "lag": 1}, {"source": "Healthcare", "target": "Energy", "years": 4, "fstat": 2.41, "fmax": 8.52, "lag": 3}, {"source": "Healthcare", "target": "Consumer Cyclical", "years": 4, "fstat": 3.36, "fmax": 14.46, "lag": 1}, {"source": "Financial Services", "target": "Basic Materials", "years": 4, "fstat": 2.3, "fmax": 4.61, "lag": 2}, {"source": "Financial Services", "target": "Consumer Cyclical", "years": 4, "fstat": 2.48, "fmax": 4.77, "lag": 10}, {"source": "Healthcare", "target": "Financial Services", "years": 4, "fstat": 2.91, "fmax": 9.68, "lag": 2}, {"source": "Consumer Cyclical", "target": "Energy", "years": 3, "fstat": 3.06, "fmax": 13.66, "lag": 1}, {"source": "Healthcare", "target": "Consumer Defensive", "years": 3, "fstat": 1.75, "fmax": 3.61, "lag": 7}, {"source": "Energy", "target": "Consumer Cyclical", "years": 3, "fstat": 1.74, "fmax": 2.8, "lag": 4}, {"source": "Basic Materials", "target": "Energy", "years": 3, "fstat": 2.19, "fmax": 6.98, "lag": 1}, {"source": "Basic Materials", "target": "Technology", "years": 3, "fstat": 2.6, "fmax": 7.5, "lag": 1}, {"source": "Communication Services", "target": "Utilities", "years": 3, "fstat": 2.0, "fmax": 5.53, "lag": 4}, {"source": "Consumer Defensive", "target": "Technology", "years": 3, "fstat": 2.83, "fmax": 8.51, "lag": 1}, {"source": "Consumer Cyclical", "target": "Real Estate", "years": 3, "fstat": 2.99, "fmax": 7.26, "lag": 7}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 3, "fstat": 2.47, "fmax": 7.79, "lag": 3}, {"source": "Financial Services", "target": "Healthcare", "years": 3, "fstat": 1.59, "fmax": 2.98, "lag": 12}, {"source": "Consumer Cyclical", "target": "Technology", "years": 3, "fstat": 4.61, "fmax": 15.16, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 3, "fstat": 2.91, "fmax": 11.53, "lag": 6}, {"source": "Energy", "target": "Real Estate", "years": 3, "fstat": 2.0, "fmax": 4.92, "lag": 3}, {"source": "Utilities", "target": "Technology", "years": 3, "fstat": 1.98, "fmax": 6.23, "lag": 3}, {"source": "Real Estate", "target": "Energy", "years": 3, "fstat": 2.25, "fmax": 4.51, "lag": 2}, {"source": "Industrials", "target": "Healthcare", "years": 3, "fstat": 3.13, "fmax": 9.34, "lag": 1}, {"source": "Industrials", "target": "Financial Services", "years": 3, "fstat": 2.54, "fmax": 5.43, "lag": 1}, {"source": "Industrials", "target": "Energy", "years": 3, "fstat": 1.98, "fmax": 4.1, "lag": 6}, {"source": "Real Estate", "target": "Utilities", "years": 3, "fstat": 2.53, "fmax": 5.68, "lag": 1}, {"source": "Technology", "target": "Basic Materials", "years": 3, "fstat": 1.56, "fmax": 3.7, "lag": 10}, {"source": "Industrials", "target": "Utilities", "years": 3, "fstat": 4.58, "fmax": 15.32, "lag": 1}, {"source": "Technology", "target": "Consumer Defensive", "years": 3, "fstat": 4.29, "fmax": 17.07, "lag": 1}, {"source": "Healthcare", "target": "Technology", "years": 3, "fstat": 2.89, "fmax": 7.05, "lag": 1}, {"source": "Healthcare", "target": "Utilities", "years": 3, "fstat": 4.11, "fmax": 9.84, "lag": 2}, {"source": "Technology", "target": "Industrials", "years": 3, "fstat": 1.84, "fmax": 5.96, "lag": 2}, {"source": "Utilities", "target": "Communication Services", "years": 3, "fstat": 3.46, "fmax": 14.51, "lag": 1}, {"source": "Utilities", "target": "Financial Services", "years": 3, "fstat": 2.55, "fmax": 7.71, "lag": 2}, {"source": "Utilities", "target": "Healthcare", "years": 3, "fstat": 3.12, "fmax": 11.01, "lag": 1}, {"source": "Technology", "target": "Financial Services", "years": 3, "fstat": 1.65, "fmax": 2.91, "lag": 7}, {"source": "Energy", "target": "Technology", "years": 3, "fstat": 2.86, "fmax": 11.35, "lag": 6}], "rrs_m_matrix": [{"cause": "Communication Services", "effect": "Technology", "lag": 1, "years": 9, "fmax": 7.53}, {"cause": "Real Estate", "effect": "Basic Materials", "lag": 5, "years": 9, "fmax": 4.34}, {"cause": "Basic Materials", "effect": "Real Estate", "lag": 5, "years": 9, "fmax": 6.19}, {"cause": "Industrials", "effect": "Consumer Defensive", "lag": 1, "years": 8, "fmax": 10.77}, {"cause": "Technology", "effect": "Healthcare", "lag": 1, "years": 8, "fmax": 37.63}, {"cause": "Real Estate", "effect": "Industrials", "lag": 1, "years": 8, "fmax": 12.72}, {"cause": "Financial Services", "effect": "Utilities", "lag": 3, "years": 8, "fmax": 9.97}, {"cause": "Energy", "effect": "Financial Services", "lag": 2, "years": 7, "fmax": 3.5}, {"cause": "Healthcare", "effect": "Industrials", "lag": 4, "years": 7, "fmax": 9.28}, {"cause": "Consumer Cyclical", "effect": "Basic Materials", "lag": 1, "years": 7, "fmax": 6.76}, {"cause": "Healthcare", "effect": "Real Estate", "lag": 6, "years": 7, "fmax": 4.57}, {"cause": "Communication Services", "effect": "Basic Materials", "lag": 3, "years": 7, "fmax": 5.38}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "lag": 4, "years": 7, "fmax": 19.02}, {"cause": "Financial Services", "effect": "Industrials", "lag": 1, "years": 6, "fmax": 7.77}, {"cause": "Consumer Defensive", "effect": "Energy", "lag": 6, "years": 6, "fmax": 3.46}, {"cause": "Industrials", "effect": "Communication Services", "lag": 1, "years": 6, "fmax": 5.7}, {"cause": "Industrials", "effect": "Technology", "lag": 1, "years": 6, "fmax": 8.91}, {"cause": "Consumer Defensive", "effect": "Consumer Cyclical", "lag": 1, "years": 6, "fmax": 4.88}, {"cause": "Real Estate", "effect": "Financial Services", "lag": 2, "years": 6, "fmax": 3.77}, {"cause": "Energy", "effect": "Communication Services", "lag": 3, "years": 6, "fmax": 3.85}, {"cause": "Financial Services", "effect": "Technology", "lag": 1, "years": 6, "fmax": 7.81}, {"cause": "Healthcare", "effect": "Communication Services", "lag": 1, "years": 6, "fmax": 9.99}, {"cause": "Basic Materials", "effect": "Healthcare", "lag": 1, "years": 6, "fmax": 24.89}, {"cause": "Communication Services", "effect": "Industrials", "lag": 1, "years": 6, "fmax": 5.92}, {"cause": "Communication Services", "effect": "Consumer Cyclical", "lag": 3, "years": 6, "fmax": 10.68}, {"cause": "Healthcare", "effect": "Basic Materials", "lag": 2, "years": 6, "fmax": 8.35}, {"cause": "Utilities", "effect": "Consumer Cyclical", "lag": 2, "years": 5, "fmax": 6.71}, {"cause": "Industrials", "effect": "Consumer Cyclical", "lag": 3, "years": 5, "fmax": 8.44}, {"cause": "Financial Services", "effect": "Energy", "lag": 3, "years": 5, "fmax": 4.7}, {"cause": "Basic Materials", "effect": "Financial Services", "lag": 11, "years": 5, "fmax": 2.35}, {"cause": "Energy", "effect": "Industrials", "lag": 2, "years": 5, "fmax": 7.05}, {"cause": "Utilities", "effect": "Industrials", "lag": 5, "years": 5, "fmax": 4.47}, {"cause": "Industrials", "effect": "Real Estate", "lag": 1, "years": 5, "fmax": 5.29}, {"cause": "Utilities", "effect": "Real Estate", "lag": 7, "years": 5, "fmax": 3.02}, {"cause": "Financial Services", "effect": "Consumer Cyclical", "lag": 10, "years": 4, "fmax": 4.77}, {"cause": "Financial Services", "effect": "Basic Materials", "lag": 2, "years": 4, "fmax": 4.61}, {"cause": "Healthcare", "effect": "Consumer Cyclical", "lag": 1, "years": 4, "fmax": 14.46}, {"cause": "Healthcare", "effect": "Energy", "lag": 3, "years": 4, "fmax": 8.52}, {"cause": "Financial Services", "effect": "Real Estate", "lag": 1, "years": 4, "fmax": 7.3}, {"cause": "Healthcare", "effect": "Financial Services", "lag": 2, "years": 4, "fmax": 9.68}, {"cause": "Consumer Defensive", "effect": "Utilities", "lag": 9, "years": 4, "fmax": 8.36}, {"cause": "Real Estate", "effect": "Communication Services", "lag": 3, "years": 4, "fmax": 7.16}, {"cause": "Consumer Defensive", "effect": "Healthcare", "lag": 1, "years": 4, "fmax": 7.9}, {"cause": "Real Estate", "effect": "Consumer Defensive", "lag": 3, "years": 4, "fmax": 3.14}, {"cause": "Basic Materials", "effect": "Utilities", "lag": 1, "years": 4, "fmax": 10.01}, {"cause": "Communication Services", "effect": "Consumer Defensive", "lag": 2, "years": 4, "fmax": 5.2}, {"cause": "Real Estate", "effect": "Technology", "lag": 1, "years": 4, "fmax": 4.9}, {"cause": "Communication Services", "effect": "Financial Services", "lag": 10, "years": 4, "fmax": 9.81}, {"cause": "Technology", "effect": "Communication Services", "lag": 1, "years": 4, "fmax": 11.04}, {"cause": "Utilities", "effect": "Basic Materials", "lag": 4, "years": 4, "fmax": 5.77}, {"cause": "Technology", "effect": "Financial Services", "lag": 7, "years": 3, "fmax": 2.91}, {"cause": "Utilities", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 11.01}, {"cause": "Utilities", "effect": "Financial Services", "lag": 2, "years": 3, "fmax": 7.71}, {"cause": "Utilities", "effect": "Communication Services", "lag": 1, "years": 3, "fmax": 14.51}, {"cause": "Technology", "effect": "Industrials", "lag": 2, "years": 3, "fmax": 5.96}, {"cause": "Healthcare", "effect": "Utilities", "lag": 2, "years": 3, "fmax": 9.84}, {"cause": "Healthcare", "effect": "Technology", "lag": 1, "years": 3, "fmax": 7.05}, {"cause": "Technology", "effect": "Consumer Defensive", "lag": 1, "years": 3, "fmax": 17.07}, {"cause": "Industrials", "effect": "Utilities", "lag": 1, "years": 3, "fmax": 15.32}, {"cause": "Technology", "effect": "Basic Materials", "lag": 10, "years": 3, "fmax": 3.7}, {"cause": "Real Estate", "effect": "Utilities", "lag": 1, "years": 3, "fmax": 5.68}, {"cause": "Real Estate", "effect": "Energy", "lag": 2, "years": 3, "fmax": 4.51}, {"cause": "Industrials", "effect": "Energy", "lag": 6, "years": 3, "fmax": 4.1}, {"cause": "Industrials", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 5.43}, {"cause": "Industrials", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 9.34}, {"cause": "Financial Services", "effect": "Healthcare", "lag": 12, "years": 3, "fmax": 2.98}, {"cause": "Utilities", "effect": "Technology", "lag": 3, "years": 3, "fmax": 6.23}, {"cause": "Healthcare", "effect": "Consumer Defensive", "lag": 7, "years": 3, "fmax": 3.61}, {"cause": "Energy", "effect": "Consumer Cyclical", "lag": 4, "years": 3, "fmax": 2.8}, {"cause": "Basic Materials", "effect": "Energy", "lag": 1, "years": 3, "fmax": 6.98}, {"cause": "Basic Materials", "effect": "Technology", "lag": 1, "years": 3, "fmax": 7.5}, {"cause": "Communication Services", "effect": "Utilities", "lag": 4, "years": 3, "fmax": 5.53}, {"cause": "Consumer Cyclical", "effect": "Energy", "lag": 1, "years": 3, "fmax": 13.66}, {"cause": "Consumer Cyclical", "effect": "Real Estate", "lag": 7, "years": 3, "fmax": 7.26}, {"cause": "Consumer Defensive", "effect": "Basic Materials", "lag": 3, "years": 3, "fmax": 7.79}, {"cause": "Consumer Defensive", "effect": "Technology", "lag": 1, "years": 3, "fmax": 8.51}, {"cause": "Consumer Cyclical", "effect": "Technology", "lag": 1, "years": 3, "fmax": 15.16}, {"cause": "Energy", "effect": "Healthcare", "lag": 6, "years": 3, "fmax": 11.53}, {"cause": "Energy", "effect": "Real Estate", "lag": 3, "years": 3, "fmax": 4.92}, {"cause": "Energy", "effect": "Technology", "lag": 6, "years": 3, "fmax": 11.35}], "bp_w_links": [{"source": "Consumer Cyclical", "target": "Communication Services", "years": 12, "fstat": 4.12, "fmax": 9.15, "lag": 1}, {"source": "Real Estate", "target": "Industrials", "years": 11, "fstat": 2.9, "fmax": 5.82, "lag": 8}, {"source": "Industrials", "target": "Utilities", "years": 11, "fstat": 4.76, "fmax": 11.6, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 11, "fstat": 4.48, "fmax": 13.15, "lag": 1}, {"source": "Basic Materials", "target": "Technology", "years": 9, "fstat": 1.91, "fmax": 3.5, "lag": 7}, {"source": "Energy", "target": "Financial Services", "years": 9, "fstat": 3.76, "fmax": 9.25, "lag": 1}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 9, "fstat": 2.71, "fmax": 5.97, "lag": 6}, {"source": "Consumer Defensive", "target": "Technology", "years": 9, "fstat": 2.96, "fmax": 8.83, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 9, "fstat": 4.43, "fmax": 12.6, "lag": 1}, {"source": "Real Estate", "target": "Energy", "years": 9, "fstat": 4.34, "fmax": 18.85, "lag": 2}, {"source": "Basic Materials", "target": "Energy", "years": 8, "fstat": 2.44, "fmax": 7.82, "lag": 1}, {"source": "Healthcare", "target": "Financial Services", "years": 8, "fstat": 2.68, "fmax": 5.7, "lag": 1}, {"source": "Energy", "target": "Consumer Cyclical", "years": 8, "fstat": 2.21, "fmax": 4.54, "lag": 3}, {"source": "Basic Materials", "target": "Utilities", "years": 8, "fstat": 3.96, "fmax": 13.35, "lag": 1}, {"source": "Financial Services", "target": "Healthcare", "years": 7, "fstat": 3.62, "fmax": 14.22, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 7, "fstat": 2.25, "fmax": 4.29, "lag": 2}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 7, "fstat": 3.69, "fmax": 11.7, "lag": 1}, {"source": "Industrials", "target": "Financial Services", "years": 7, "fstat": 3.86, "fmax": 10.74, "lag": 2}, {"source": "Consumer Cyclical", "target": "Industrials", "years": 7, "fstat": 2.8, "fmax": 4.64, "lag": 2}, {"source": "Financial Services", "target": "Basic Materials", "years": 7, "fstat": 2.77, "fmax": 6.85, "lag": 4}, {"source": "Real Estate", "target": "Utilities", "years": 7, "fstat": 2.25, "fmax": 3.77, "lag": 5}, {"source": "Consumer Defensive", "target": "Industrials", "years": 6, "fstat": 2.48, "fmax": 8.48, "lag": 12}, {"source": "Healthcare", "target": "Basic Materials", "years": 6, "fstat": 2.92, "fmax": 10.97, "lag": 1}, {"source": "Industrials", "target": "Healthcare", "years": 6, "fstat": 2.21, "fmax": 4.35, "lag": 4}, {"source": "Financial Services", "target": "Consumer Cyclical", "years": 6, "fstat": 2.24, "fmax": 4.07, "lag": 5}, {"source": "Technology", "target": "Communication Services", "years": 6, "fstat": 2.02, "fmax": 3.92, "lag": 5}, {"source": "Basic Materials", "target": "Financial Services", "years": 6, "fstat": 2.92, "fmax": 8.82, "lag": 1}, {"source": "Consumer Cyclical", "target": "Technology", "years": 6, "fstat": 2.46, "fmax": 5.83, "lag": 2}, {"source": "Healthcare", "target": "Industrials", "years": 6, "fstat": 2.22, "fmax": 5.38, "lag": 1}, {"source": "Basic Materials", "target": "Healthcare", "years": 6, "fstat": 2.95, "fmax": 6.5, "lag": 1}, {"source": "Communication Services", "target": "Energy", "years": 6, "fstat": 3.26, "fmax": 8.84, "lag": 1}, {"source": "Healthcare", "target": "Consumer Defensive", "years": 6, "fstat": 2.77, "fmax": 5.54, "lag": 2}, {"source": "Industrials", "target": "Real Estate", "years": 6, "fstat": 3.2, "fmax": 11.79, "lag": 1}, {"source": "Consumer Defensive", "target": "Healthcare", "years": 6, "fstat": 2.92, "fmax": 5.85, "lag": 2}, {"source": "Utilities", "target": "Financial Services", "years": 6, "fstat": 4.1, "fmax": 13.88, "lag": 1}, {"source": "Financial Services", "target": "Industrials", "years": 6, "fstat": 2.86, "fmax": 9.7, "lag": 1}, {"source": "Real Estate", "target": "Financial Services", "years": 6, "fstat": 4.0, "fmax": 14.27, "lag": 1}, {"source": "Communication Services", "target": "Technology", "years": 5, "fstat": 1.88, "fmax": 3.28, "lag": 5}, {"source": "Technology", "target": "Healthcare", "years": 5, "fstat": 2.02, "fmax": 3.34, "lag": 8}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 5, "fstat": 2.52, "fmax": 5.56, "lag": 1}, {"source": "Technology", "target": "Energy", "years": 5, "fstat": 2.0, "fmax": 2.91, "lag": 7}, {"source": "Consumer Cyclical", "target": "Utilities", "years": 5, "fstat": 2.4, "fmax": 9.4, "lag": 1}, {"source": "Communication Services", "target": "Basic Materials", "years": 5, "fstat": 2.31, "fmax": 5.37, "lag": 1}, {"source": "Healthcare", "target": "Technology", "years": 5, "fstat": 3.39, "fmax": 10.72, "lag": 1}, {"source": "Basic Materials", "target": "Real Estate", "years": 5, "fstat": 2.89, "fmax": 9.87, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 5, "fstat": 2.92, "fmax": 8.03, "lag": 1}, {"source": "Consumer Defensive", "target": "Financial Services", "years": 5, "fstat": 1.79, "fmax": 2.68, "lag": 6}, {"source": "Financial Services", "target": "Energy", "years": 5, "fstat": 2.54, "fmax": 7.59, "lag": 1}, {"source": "Financial Services", "target": "Communication Services", "years": 5, "fstat": 2.72, "fmax": 7.55, "lag": 1}, {"source": "Financial Services", "target": "Technology", "years": 5, "fstat": 1.73, "fmax": 4.05, "lag": 2}, {"source": "Healthcare", "target": "Consumer Cyclical", "years": 5, "fstat": 2.72, "fmax": 11.68, "lag": 10}, {"source": "Energy", "target": "Real Estate", "years": 5, "fstat": 4.07, "fmax": 16.29, "lag": 1}, {"source": "Energy", "target": "Utilities", "years": 5, "fstat": 1.76, "fmax": 4.53, "lag": 5}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fstat": 2.28, "fmax": 7.58, "lag": 3}], "bp_w_links3": [{"source": "Consumer Cyclical", "target": "Communication Services", "years": 12, "fstat": 4.12, "fmax": 9.15, "lag": 1}, {"source": "Real Estate", "target": "Industrials", "years": 11, "fstat": 2.9, "fmax": 5.82, "lag": 8}, {"source": "Industrials", "target": "Utilities", "years": 11, "fstat": 4.76, "fmax": 11.6, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 11, "fstat": 4.48, "fmax": 13.15, "lag": 1}, {"source": "Basic Materials", "target": "Technology", "years": 9, "fstat": 1.91, "fmax": 3.5, "lag": 7}, {"source": "Energy", "target": "Financial Services", "years": 9, "fstat": 3.76, "fmax": 9.25, "lag": 1}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 9, "fstat": 2.71, "fmax": 5.97, "lag": 6}, {"source": "Consumer Defensive", "target": "Technology", "years": 9, "fstat": 2.96, "fmax": 8.83, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 9, "fstat": 4.43, "fmax": 12.6, "lag": 1}, {"source": "Real Estate", "target": "Energy", "years": 9, "fstat": 4.34, "fmax": 18.85, "lag": 2}, {"source": "Basic Materials", "target": "Energy", "years": 8, "fstat": 2.44, "fmax": 7.82, "lag": 1}, {"source": "Healthcare", "target": "Financial Services", "years": 8, "fstat": 2.68, "fmax": 5.7, "lag": 1}, {"source": "Energy", "target": "Consumer Cyclical", "years": 8, "fstat": 2.21, "fmax": 4.54, "lag": 3}, {"source": "Basic Materials", "target": "Utilities", "years": 8, "fstat": 3.96, "fmax": 13.35, "lag": 1}, {"source": "Financial Services", "target": "Healthcare", "years": 7, "fstat": 3.62, "fmax": 14.22, "lag": 1}, {"source": "Healthcare", "target": "Communication Services", "years": 7, "fstat": 2.25, "fmax": 4.29, "lag": 2}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 7, "fstat": 3.69, "fmax": 11.7, "lag": 1}, {"source": "Industrials", "target": "Financial Services", "years": 7, "fstat": 3.86, "fmax": 10.74, "lag": 2}, {"source": "Consumer Cyclical", "target": "Industrials", "years": 7, "fstat": 2.8, "fmax": 4.64, "lag": 2}, {"source": "Financial Services", "target": "Basic Materials", "years": 7, "fstat": 2.77, "fmax": 6.85, "lag": 4}, {"source": "Real Estate", "target": "Utilities", "years": 7, "fstat": 2.25, "fmax": 3.77, "lag": 5}, {"source": "Consumer Cyclical", "target": "Technology", "years": 6, "fstat": 2.46, "fmax": 5.83, "lag": 2}, {"source": "Consumer Defensive", "target": "Industrials", "years": 6, "fstat": 2.48, "fmax": 8.48, "lag": 12}, {"source": "Healthcare", "target": "Basic Materials", "years": 6, "fstat": 2.92, "fmax": 10.97, "lag": 1}, {"source": "Industrials", "target": "Healthcare", "years": 6, "fstat": 2.21, "fmax": 4.35, "lag": 4}, {"source": "Financial Services", "target": "Consumer Cyclical", "years": 6, "fstat": 2.24, "fmax": 4.07, "lag": 5}, {"source": "Technology", "target": "Communication Services", "years": 6, "fstat": 2.02, "fmax": 3.92, "lag": 5}, {"source": "Basic Materials", "target": "Financial Services", "years": 6, "fstat": 2.92, "fmax": 8.82, "lag": 1}, {"source": "Healthcare", "target": "Industrials", "years": 6, "fstat": 2.22, "fmax": 5.38, "lag": 1}, {"source": "Utilities", "target": "Financial Services", "years": 6, "fstat": 4.1, "fmax": 13.88, "lag": 1}, {"source": "Communication Services", "target": "Energy", "years": 6, "fstat": 3.26, "fmax": 8.84, "lag": 1}, {"source": "Basic Materials", "target": "Healthcare", "years": 6, "fstat": 2.95, "fmax": 6.5, "lag": 1}, {"source": "Real Estate", "target": "Financial Services", "years": 6, "fstat": 4.0, "fmax": 14.27, "lag": 1}, {"source": "Healthcare", "target": "Consumer Defensive", "years": 6, "fstat": 2.77, "fmax": 5.54, "lag": 2}, {"source": "Industrials", "target": "Real Estate", "years": 6, "fstat": 3.2, "fmax": 11.79, "lag": 1}, {"source": "Consumer Defensive", "target": "Healthcare", "years": 6, "fstat": 2.92, "fmax": 5.85, "lag": 2}, {"source": "Financial Services", "target": "Industrials", "years": 6, "fstat": 2.86, "fmax": 9.7, "lag": 1}, {"source": "Basic Materials", "target": "Real Estate", "years": 5, "fstat": 2.89, "fmax": 9.87, "lag": 1}, {"source": "Utilities", "target": "Consumer Cyclical", "years": 5, "fstat": 2.28, "fmax": 7.58, "lag": 3}, {"source": "Technology", "target": "Healthcare", "years": 5, "fstat": 2.02, "fmax": 3.34, "lag": 8}, {"source": "Communication Services", "target": "Consumer Cyclical", "years": 5, "fstat": 2.52, "fmax": 5.56, "lag": 1}, {"source": "Technology", "target": "Energy", "years": 5, "fstat": 2.0, "fmax": 2.91, "lag": 7}, {"source": "Consumer Cyclical", "target": "Utilities", "years": 5, "fstat": 2.4, "fmax": 9.4, "lag": 1}, {"source": "Communication Services", "target": "Basic Materials", "years": 5, "fstat": 2.31, "fmax": 5.37, "lag": 1}, {"source": "Healthcare", "target": "Technology", "years": 5, "fstat": 3.39, "fmax": 10.72, "lag": 1}, {"source": "Healthcare", "target": "Consumer Cyclical", "years": 5, "fstat": 2.72, "fmax": 11.68, "lag": 10}, {"source": "Communication Services", "target": "Technology", "years": 5, "fstat": 1.88, "fmax": 3.28, "lag": 5}, {"source": "Financial Services", "target": "Energy", "years": 5, "fstat": 2.54, "fmax": 7.59, "lag": 1}, {"source": "Financial Services", "target": "Utilities", "years": 5, "fstat": 2.92, "fmax": 8.03, "lag": 1}, {"source": "Financial Services", "target": "Communication Services", "years": 5, "fstat": 2.72, "fmax": 7.55, "lag": 1}, {"source": "Financial Services", "target": "Technology", "years": 5, "fstat": 1.73, "fmax": 4.05, "lag": 2}, {"source": "Energy", "target": "Real Estate", "years": 5, "fstat": 4.07, "fmax": 16.29, "lag": 1}, {"source": "Energy", "target": "Utilities", "years": 5, "fstat": 1.76, "fmax": 4.53, "lag": 5}, {"source": "Consumer Defensive", "target": "Financial Services", "years": 5, "fstat": 1.79, "fmax": 2.68, "lag": 6}, {"source": "Industrials", "target": "Communication Services", "years": 4, "fstat": 1.96, "fmax": 7.24, "lag": 5}, {"source": "Technology", "target": "Basic Materials", "years": 4, "fstat": 2.38, "fmax": 7.52, "lag": 1}, {"source": "Consumer Cyclical", "target": "Consumer Defensive", "years": 4, "fstat": 2.85, "fmax": 6.77, "lag": 1}, {"source": "Industrials", "target": "Technology", "years": 4, "fstat": 2.36, "fmax": 5.18, "lag": 1}, {"source": "Consumer Cyclical", "target": "Real Estate", "years": 4, "fstat": 1.72, "fmax": 2.8, "lag": 16}, {"source": "Utilities", "target": "Basic Materials", "years": 4, "fstat": 2.36, "fmax": 6.88, "lag": 1}, {"source": "Utilities", "target": "Healthcare", "years": 4, "fstat": 2.09, "fmax": 6.2, "lag": 5}, {"source": "Healthcare", "target": "Energy", "years": 4, "fstat": 2.22, "fmax": 4.32, "lag": 6}, {"source": "Real Estate", "target": "Consumer Cyclical", "years": 4, "fstat": 2.07, "fmax": 3.0, "lag": 5}, {"source": "Utilities", "target": "Consumer Defensive", "years": 4, "fstat": 1.75, "fmax": 3.26, "lag": 5}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 3, "fstat": 2.59, "fmax": 8.58, "lag": 1}, {"source": "Consumer Cyclical", "target": "Financial Services", "years": 3, "fstat": 1.72, "fmax": 4.47, "lag": 1}, {"source": "Communication Services", "target": "Healthcare", "years": 3, "fstat": 1.8, "fmax": 3.22, "lag": 2}, {"source": "Consumer Cyclical", "target": "Energy", "years": 3, "fstat": 2.34, "fmax": 4.14, "lag": 1}, {"source": "Consumer Defensive", "target": "Utilities", "years": 3, "fstat": 1.93, "fmax": 5.6, "lag": 1}, {"source": "Consumer Defensive", "target": "Communication Services", "years": 3, "fstat": 2.13, "fmax": 6.1, "lag": 1}, {"source": "Basic Materials", "target": "Communication Services", "years": 3, "fstat": 2.24, "fmax": 4.87, "lag": 2}, {"source": "Communication Services", "target": "Financial Services", "years": 3, "fstat": 1.61, "fmax": 3.57, "lag": 4}, {"source": "Consumer Defensive", "target": "Consumer Cyclical", "years": 3, "fstat": 1.91, "fmax": 5.0, "lag": 8}, {"source": "Industrials", "target": "Basic Materials", "years": 3, "fstat": 1.89, "fmax": 4.98, "lag": 1}, {"source": "Real Estate", "target": "Healthcare", "years": 3, "fstat": 1.84, "fmax": 4.4, "lag": 1}, {"source": "Technology", "target": "Financial Services", "years": 3, "fstat": 2.78, "fmax": 6.8, "lag": 1}, {"source": "Utilities", "target": "Energy", "years": 3, "fstat": 2.44, "fmax": 8.78, "lag": 1}, {"source": "Communication Services", "target": "Consumer Defensive", "years": 3, "fstat": 1.55, "fmax": 2.25, "lag": 13}], "bp_w_matrix": [{"cause": "Consumer Cyclical", "effect": "Communication Services", "lag": 1, "years": 12, "fmax": 9.15}, {"cause": "Energy", "effect": "Healthcare", "lag": 1, "years": 11, "fmax": 13.15}, {"cause": "Real Estate", "effect": "Industrials", "lag": 8, "years": 11, "fmax": 5.82}, {"cause": "Industrials", "effect": "Utilities", "lag": 1, "years": 11, "fmax": 11.6}, {"cause": "Real Estate", "effect": "Energy", "lag": 2, "years": 9, "fmax": 18.85}, {"cause": "Utilities", "effect": "Real Estate", "lag": 1, "years": 9, "fmax": 12.6}, {"cause": "Consumer Defensive", "effect": "Technology", "lag": 1, "years": 9, "fmax": 8.83}, {"cause": "Basic Materials", "effect": "Technology", "lag": 7, "years": 9, "fmax": 3.5}, {"cause": "Consumer Defensive", "effect": "Basic Materials", "lag": 6, "years": 9, "fmax": 5.97}, {"cause": "Energy", "effect": "Financial Services", "lag": 1, "years": 9, "fmax": 9.25}, {"cause": "Basic Materials", "effect": "Energy", "lag": 1, "years": 8, "fmax": 7.82}, {"cause": "Healthcare", "effect": "Financial Services", "lag": 1, "years": 8, "fmax": 5.7}, {"cause": "Energy", "effect": "Consumer Cyclical", "lag": 3, "years": 8, "fmax": 4.54}, {"cause": "Basic Materials", "effect": "Utilities", "lag": 1, "years": 8, "fmax": 13.35}, {"cause": "Industrials", "effect": "Financial Services", "lag": 2, "years": 7, "fmax": 10.74}, {"cause": "Real Estate", "effect": "Utilities", "lag": 5, "years": 7, "fmax": 3.77}, {"cause": "Financial Services", "effect": "Basic Materials", "lag": 4, "years": 7, "fmax": 6.85}, {"cause": "Consumer Cyclical", "effect": "Industrials", "lag": 2, "years": 7, "fmax": 4.64}, {"cause": "Financial Services", "effect": "Healthcare", "lag": 1, "years": 7, "fmax": 14.22}, {"cause": "Basic Materials", "effect": "Consumer Defensive", "lag": 1, "years": 7, "fmax": 11.7}, {"cause": "Healthcare", "effect": "Communication Services", "lag": 2, "years": 7, "fmax": 4.29}, {"cause": "Financial Services", "effect": "Industrials", "lag": 1, "years": 6, "fmax": 9.7}, {"cause": "Utilities", "effect": "Financial Services", "lag": 1, "years": 6, "fmax": 13.88}, {"cause": "Consumer Defensive", "effect": "Healthcare", "lag": 2, "years": 6, "fmax": 5.85}, {"cause": "Industrials", "effect": "Real Estate", "lag": 1, "years": 6, "fmax": 11.79}, {"cause": "Healthcare", "effect": "Consumer Defensive", "lag": 2, "years": 6, "fmax": 5.54}, {"cause": "Real Estate", "effect": "Financial Services", "lag": 1, "years": 6, "fmax": 14.27}, {"cause": "Basic Materials", "effect": "Healthcare", "lag": 1, "years": 6, "fmax": 6.5}, {"cause": "Communication Services", "effect": "Energy", "lag": 1, "years": 6, "fmax": 8.84}, {"cause": "Consumer Cyclical", "effect": "Technology", "lag": 2, "years": 6, "fmax": 5.83}, {"cause": "Healthcare", "effect": "Industrials", "lag": 1, "years": 6, "fmax": 5.38}, {"cause": "Basic Materials", "effect": "Financial Services", "lag": 1, "years": 6, "fmax": 8.82}, {"cause": "Technology", "effect": "Communication Services", "lag": 5, "years": 6, "fmax": 3.92}, {"cause": "Financial Services", "effect": "Consumer Cyclical", "lag": 5, "years": 6, "fmax": 4.07}, {"cause": "Industrials", "effect": "Healthcare", "lag": 4, "years": 6, "fmax": 4.35}, {"cause": "Healthcare", "effect": "Basic Materials", "lag": 1, "years": 6, "fmax": 10.97}, {"cause": "Consumer Defensive", "effect": "Industrials", "lag": 12, "years": 6, "fmax": 8.48}, {"cause": "Energy", "effect": "Utilities", "lag": 5, "years": 5, "fmax": 4.53}, {"cause": "Energy", "effect": "Real Estate", "lag": 1, "years": 5, "fmax": 16.29}, {"cause": "Healthcare", "effect": "Consumer Cyclical", "lag": 10, "years": 5, "fmax": 11.68}, {"cause": "Financial Services", "effect": "Technology", "lag": 2, "years": 5, "fmax": 4.05}, {"cause": "Financial Services", "effect": "Communication Services", "lag": 1, "years": 5, "fmax": 7.55}, {"cause": "Financial Services", "effect": "Utilities", "lag": 1, "years": 5, "fmax": 8.03}, {"cause": "Financial Services", "effect": "Energy", "lag": 1, "years": 5, "fmax": 7.59}, {"cause": "Consumer Defensive", "effect": "Financial Services", "lag": 6, "years": 5, "fmax": 2.68}, {"cause": "Communication Services", "effect": "Technology", "lag": 5, "years": 5, "fmax": 3.28}, {"cause": "Basic Materials", "effect": "Real Estate", "lag": 1, "years": 5, "fmax": 9.87}, {"cause": "Healthcare", "effect": "Technology", "lag": 1, "years": 5, "fmax": 10.72}, {"cause": "Communication Services", "effect": "Basic Materials", "lag": 1, "years": 5, "fmax": 5.37}, {"cause": "Consumer Cyclical", "effect": "Utilities", "lag": 1, "years": 5, "fmax": 9.4}, {"cause": "Technology", "effect": "Energy", "lag": 7, "years": 5, "fmax": 2.91}, {"cause": "Communication Services", "effect": "Consumer Cyclical", "lag": 1, "years": 5, "fmax": 5.56}, {"cause": "Technology", "effect": "Healthcare", "lag": 8, "years": 5, "fmax": 3.34}, {"cause": "Utilities", "effect": "Consumer Cyclical", "lag": 3, "years": 5, "fmax": 7.58}, {"cause": "Real Estate", "effect": "Consumer Cyclical", "lag": 5, "years": 4, "fmax": 3.0}, {"cause": "Healthcare", "effect": "Energy", "lag": 6, "years": 4, "fmax": 4.32}, {"cause": "Utilities", "effect": "Healthcare", "lag": 5, "years": 4, "fmax": 6.2}, {"cause": "Utilities", "effect": "Consumer Defensive", "lag": 5, "years": 4, "fmax": 3.26}, {"cause": "Utilities", "effect": "Basic Materials", "lag": 1, "years": 4, "fmax": 6.88}, {"cause": "Industrials", "effect": "Communication Services", "lag": 5, "years": 4, "fmax": 7.24}, {"cause": "Industrials", "effect": "Technology", "lag": 1, "years": 4, "fmax": 5.18}, {"cause": "Consumer Cyclical", "effect": "Consumer Defensive", "lag": 1, "years": 4, "fmax": 6.77}, {"cause": "Consumer Cyclical", "effect": "Real Estate", "lag": 16, "years": 4, "fmax": 2.8}, {"cause": "Technology", "effect": "Basic Materials", "lag": 1, "years": 4, "fmax": 7.52}, {"cause": "Utilities", "effect": "Energy", "lag": 1, "years": 3, "fmax": 8.78}, {"cause": "Technology", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 6.8}, {"cause": "Real Estate", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 4.4}, {"cause": "Industrials", "effect": "Basic Materials", "lag": 1, "years": 3, "fmax": 4.98}, {"cause": "Basic Materials", "effect": "Communication Services", "lag": 2, "years": 3, "fmax": 4.87}, {"cause": "Consumer Defensive", "effect": "Consumer Cyclical", "lag": 8, "years": 3, "fmax": 5.0}, {"cause": "Communication Services", "effect": "Financial Services", "lag": 4, "years": 3, "fmax": 3.57}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 8.58}, {"cause": "Consumer Defensive", "effect": "Communication Services", "lag": 1, "years": 3, "fmax": 6.1}, {"cause": "Consumer Defensive", "effect": "Utilities", "lag": 1, "years": 3, "fmax": 5.6}, {"cause": "Consumer Cyclical", "effect": "Energy", "lag": 1, "years": 3, "fmax": 4.14}, {"cause": "Communication Services", "effect": "Healthcare", "lag": 2, "years": 3, "fmax": 3.22}, {"cause": "Consumer Cyclical", "effect": "Financial Services", "lag": 1, "years": 3, "fmax": 4.47}, {"cause": "Communication Services", "effect": "Consumer Defensive", "lag": 13, "years": 3, "fmax": 2.25}], "bp_m_links": [{"source": "Communication Services", "target": "Energy", "years": 11, "fstat": 6.39, "fmax": 10.96, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 11, "fstat": 4.68, "fmax": 7.11, "lag": 2}, {"source": "Real Estate", "target": "Consumer Defensive", "years": 11, "fstat": 5.94, "fmax": 12.41, "lag": 2}, {"source": "Consumer Defensive", "target": "Technology", "years": 11, "fstat": 6.77, "fmax": 12.13, "lag": 1}, {"source": "Consumer Cyclical", "target": "Communication Services", "years": 10, "fstat": 8.71, "fmax": 17.66, "lag": 1}, {"source": "Technology", "target": "Financial Services", "years": 10, "fstat": 4.89, "fmax": 7.67, "lag": 1}, {"source": "Consumer Cyclical", "target": "Basic Materials", "years": 9, "fstat": 4.24, "fmax": 9.73, "lag": 3}, {"source": "Consumer Defensive", "target": "Industrials", "years": 8, "fstat": 5.13, "fmax": 10.84, "lag": 1}, {"source": "Financial Services", "target": "Basic Materials", "years": 8, "fstat": 3.9, "fmax": 11.55, "lag": 1}, {"source": "Basic Materials", "target": "Communication Services", "years": 8, "fstat": 5.05, "fmax": 11.01, "lag": 1}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 7, "fstat": 3.65, "fmax": 6.69, "lag": 1}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 7, "fstat": 2.88, "fmax": 5.77, "lag": 4}, {"source": "Real Estate", "target": "Energy", "years": 7, "fstat": 4.17, "fmax": 7.16, "lag": 1}, {"source": "Technology", "target": "Consumer Cyclical", "years": 6, "fstat": 2.43, "fmax": 4.82, "lag": 12}, {"source": "Utilities", "target": "Energy", "years": 6, "fstat": 3.89, "fmax": 8.36, "lag": 1}, {"source": "Energy", "target": "Basic Materials", "years": 6, "fstat": 3.24, "fmax": 5.67, "lag": 2}, {"source": "Basic Materials", "target": "Consumer Cyclical", "years": 6, "fstat": 2.52, "fmax": 3.09, "lag": 7}, {"source": "Technology", "target": "Real Estate", "years": 6, "fstat": 2.83, "fmax": 4.72, "lag": 5}, {"source": "Utilities", "target": "Basic Materials", "years": 6, "fstat": 2.85, "fmax": 5.63, "lag": 1}, {"source": "Healthcare", "target": "Financial Services", "years": 5, "fstat": 2.4, "fmax": 3.91, "lag": 2}, {"source": "Healthcare", "target": "Communication Services", "years": 5, "fstat": 2.75, "fmax": 6.86, "lag": 7}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 5, "fstat": 1.85, "fmax": 2.95, "lag": 8}, {"source": "Real Estate", "target": "Basic Materials", "years": 5, "fstat": 3.59, "fmax": 5.7, "lag": 1}, {"source": "Energy", "target": "Communication Services", "years": 5, "fstat": 2.21, "fmax": 3.94, "lag": 5}, {"source": "Utilities", "target": "Financial Services", "years": 5, "fstat": 3.42, "fmax": 5.66, "lag": 2}], "bp_m_links3": [{"source": "Communication Services", "target": "Energy", "years": 11, "fstat": 6.39, "fmax": 10.96, "lag": 1}, {"source": "Energy", "target": "Healthcare", "years": 11, "fstat": 4.68, "fmax": 7.11, "lag": 2}, {"source": "Real Estate", "target": "Consumer Defensive", "years": 11, "fstat": 5.94, "fmax": 12.41, "lag": 2}, {"source": "Consumer Defensive", "target": "Technology", "years": 11, "fstat": 6.77, "fmax": 12.13, "lag": 1}, {"source": "Consumer Cyclical", "target": "Communication Services", "years": 10, "fstat": 8.71, "fmax": 17.66, "lag": 1}, {"source": "Technology", "target": "Financial Services", "years": 10, "fstat": 4.89, "fmax": 7.67, "lag": 1}, {"source": "Consumer Cyclical", "target": "Basic Materials", "years": 9, "fstat": 4.24, "fmax": 9.73, "lag": 3}, {"source": "Consumer Defensive", "target": "Industrials", "years": 8, "fstat": 5.13, "fmax": 10.84, "lag": 1}, {"source": "Financial Services", "target": "Basic Materials", "years": 8, "fstat": 3.9, "fmax": 11.55, "lag": 1}, {"source": "Basic Materials", "target": "Communication Services", "years": 8, "fstat": 5.05, "fmax": 11.01, "lag": 1}, {"source": "Real Estate", "target": "Energy", "years": 7, "fstat": 4.17, "fmax": 7.16, "lag": 1}, {"source": "Consumer Cyclical", "target": "Healthcare", "years": 7, "fstat": 3.65, "fmax": 6.69, "lag": 1}, {"source": "Consumer Defensive", "target": "Basic Materials", "years": 7, "fstat": 2.88, "fmax": 5.77, "lag": 4}, {"source": "Technology", "target": "Real Estate", "years": 6, "fstat": 2.83, "fmax": 4.72, "lag": 5}, {"source": "Utilities", "target": "Basic Materials", "years": 6, "fstat": 2.85, "fmax": 5.63, "lag": 1}, {"source": "Basic Materials", "target": "Consumer Cyclical", "years": 6, "fstat": 2.52, "fmax": 3.09, "lag": 7}, {"source": "Energy", "target": "Basic Materials", "years": 6, "fstat": 3.24, "fmax": 5.67, "lag": 2}, {"source": "Utilities", "target": "Energy", "years": 6, "fstat": 3.89, "fmax": 8.36, "lag": 1}, {"source": "Technology", "target": "Consumer Cyclical", "years": 6, "fstat": 2.43, "fmax": 4.82, "lag": 12}, {"source": "Healthcare", "target": "Financial Services", "years": 5, "fstat": 2.4, "fmax": 3.91, "lag": 2}, {"source": "Healthcare", "target": "Communication Services", "years": 5, "fstat": 2.75, "fmax": 6.86, "lag": 7}, {"source": "Basic Materials", "target": "Consumer Defensive", "years": 5, "fstat": 1.85, "fmax": 2.95, "lag": 8}, {"source": "Real Estate", "target": "Basic Materials", "years": 5, "fstat": 3.59, "fmax": 5.7, "lag": 1}, {"source": "Energy", "target": "Communication Services", "years": 5, "fstat": 2.21, "fmax": 3.94, "lag": 5}, {"source": "Utilities", "target": "Financial Services", "years": 5, "fstat": 3.42, "fmax": 5.66, "lag": 2}, {"source": "Consumer Cyclical", "target": "Real Estate", "years": 4, "fstat": 1.95, "fmax": 3.16, "lag": 11}, {"source": "Energy", "target": "Consumer Cyclical", "years": 4, "fstat": 2.38, "fmax": 5.87, "lag": 2}, {"source": "Basic Materials", "target": "Utilities", "years": 4, "fstat": 2.22, "fmax": 4.13, "lag": 1}, {"source": "Communication Services", "target": "Healthcare", "years": 4, "fstat": 2.88, "fmax": 6.95, "lag": 1}, {"source": "Basic Materials", "target": "Real Estate", "years": 4, "fstat": 2.0, "fmax": 3.17, "lag": 4}, {"source": "Consumer Cyclical", "target": "Energy", "years": 4, "fstat": 2.7, "fmax": 5.62, "lag": 2}, {"source": "Utilities", "target": "Healthcare", "years": 4, "fstat": 2.39, "fmax": 4.69, "lag": 1}, {"source": "Energy", "target": "Real Estate", "years": 4, "fstat": 4.55, "fmax": 10.38, "lag": 1}, {"source": "Healthcare", "target": "Basic Materials", "years": 4, "fstat": 2.55, "fmax": 5.11, "lag": 2}, {"source": "Industrials", "target": "Utilities", "years": 4, "fstat": 2.69, "fmax": 5.64, "lag": 1}, {"source": "Energy", "target": "Utilities", "years": 4, "fstat": 3.67, "fmax": 8.64, "lag": 1}, {"source": "Energy", "target": "Financial Services", "years": 4, "fstat": 3.0, "fmax": 8.83, "lag": 1}, {"source": "Industrials", "target": "Real Estate", "years": 4, "fstat": 2.09, "fmax": 4.36, "lag": 5}, {"source": "Consumer Cyclical", "target": "Industrials", "years": 4, "fstat": 3.45, "fmax": 6.98, "lag": 1}, {"source": "Utilities", "target": "Real Estate", "years": 3, "fstat": 2.15, "fmax": 4.21, "lag": 4}, {"source": "Communication Services", "target": "Real Estate", "years": 3, "fstat": 2.3, "fmax": 4.32, "lag": 1}, {"source": "Basic Materials", "target": "Healthcare", "years": 3, "fstat": 2.35, "fmax": 4.28, "lag": 6}, {"source": "Technology", "target": "Energy", "years": 3, "fstat": 2.07, "fmax": 4.67, "lag": 3}, {"source": "Consumer Defensive", "target": "Consumer Cyclical", "years": 3, "fstat": 2.6, "fmax": 4.83, "lag": 2}, {"source": "Technology", "target": "Communication Services", "years": 3, "fstat": 2.42, "fmax": 6.24, "lag": 1}, {"source": "Real Estate", "target": "Communication Services", "years": 3, "fstat": 3.25, "fmax": 11.08, "lag": 1}, {"source": "Utilities", "target": "Industrials", "years": 3, "fstat": 2.11, "fmax": 4.57, "lag": 11}, {"source": "Real Estate", "target": "Utilities", "years": 3, "fstat": 1.42, "fmax": 3.0, "lag": 3}, {"source": "Financial Services", "target": "Technology", "years": 3, "fstat": 2.97, "fmax": 6.96, "lag": 1}, {"source": "Real Estate", "target": "Healthcare", "years": 3, "fstat": 2.43, "fmax": 5.96, "lag": 1}, {"source": "Energy", "target": "Technology", "years": 3, "fstat": 2.4, "fmax": 4.24, "lag": 1}, {"source": "Basic Materials", "target": "Industrials", "years": 3, "fstat": 2.49, "fmax": 5.34, "lag": 2}], "bp_m_matrix": [{"cause": "Communication Services", "effect": "Energy", "lag": 1, "years": 11, "fmax": 10.96}, {"cause": "Consumer Defensive", "effect": "Technology", "lag": 1, "years": 11, "fmax": 12.13}, {"cause": "Energy", "effect": "Healthcare", "lag": 2, "years": 11, "fmax": 7.11}, {"cause": "Real Estate", "effect": "Consumer Defensive", "lag": 2, "years": 11, "fmax": 12.41}, {"cause": "Consumer Cyclical", "effect": "Communication Services", "lag": 1, "years": 10, "fmax": 17.66}, {"cause": "Technology", "effect": "Financial Services", "lag": 1, "years": 10, "fmax": 7.67}, {"cause": "Consumer Cyclical", "effect": "Basic Materials", "lag": 3, "years": 9, "fmax": 9.73}, {"cause": "Consumer Defensive", "effect": "Industrials", "lag": 1, "years": 8, "fmax": 10.84}, {"cause": "Financial Services", "effect": "Basic Materials", "lag": 1, "years": 8, "fmax": 11.55}, {"cause": "Basic Materials", "effect": "Communication Services", "lag": 1, "years": 8, "fmax": 11.01}, {"cause": "Real Estate", "effect": "Energy", "lag": 1, "years": 7, "fmax": 7.16}, {"cause": "Consumer Cyclical", "effect": "Healthcare", "lag": 1, "years": 7, "fmax": 6.69}, {"cause": "Consumer Defensive", "effect": "Basic Materials", "lag": 4, "years": 7, "fmax": 5.77}, {"cause": "Technology", "effect": "Consumer Cyclical", "lag": 12, "years": 6, "fmax": 4.82}, {"cause": "Utilities", "effect": "Energy", "lag": 1, "years": 6, "fmax": 8.36}, {"cause": "Energy", "effect": "Basic Materials", "lag": 2, "years": 6, "fmax": 5.67}, {"cause": "Basic Materials", "effect": "Consumer Cyclical", "lag": 7, "years": 6, "fmax": 3.09}, {"cause": "Technology", "effect": "Real Estate", "lag": 5, "years": 6, "fmax": 4.72}, {"cause": "Utilities", "effect": "Basic Materials", "lag": 1, "years": 6, "fmax": 5.63}, {"cause": "Healthcare", "effect": "Financial Services", "lag": 2, "years": 5, "fmax": 3.91}, {"cause": "Healthcare", "effect": "Communication Services", "lag": 7, "years": 5, "fmax": 6.86}, {"cause": "Basic Materials", "effect": "Consumer Defensive", "lag": 8, "years": 5, "fmax": 2.95}, {"cause": "Real Estate", "effect": "Basic Materials", "lag": 1, "years": 5, "fmax": 5.7}, {"cause": "Energy", "effect": "Communication Services", "lag": 5, "years": 5, "fmax": 3.94}, {"cause": "Utilities", "effect": "Financial Services", "lag": 2, "years": 5, "fmax": 5.66}, {"cause": "Industrials", "effect": "Real Estate", "lag": 5, "years": 4, "fmax": 4.36}, {"cause": "Energy", "effect": "Real Estate", "lag": 1, "years": 4, "fmax": 10.38}, {"cause": "Energy", "effect": "Financial Services", "lag": 1, "years": 4, "fmax": 8.83}, {"cause": "Energy", "effect": "Utilities", "lag": 1, "years": 4, "fmax": 8.64}, {"cause": "Industrials", "effect": "Utilities", "lag": 1, "years": 4, "fmax": 5.64}, {"cause": "Consumer Cyclical", "effect": "Industrials", "lag": 1, "years": 4, "fmax": 6.98}, {"cause": "Healthcare", "effect": "Basic Materials", "lag": 2, "years": 4, "fmax": 5.11}, {"cause": "Consumer Cyclical", "effect": "Real Estate", "lag": 11, "years": 4, "fmax": 3.16}, {"cause": "Utilities", "effect": "Healthcare", "lag": 1, "years": 4, "fmax": 4.69}, {"cause": "Consumer Cyclical", "effect": "Energy", "lag": 2, "years": 4, "fmax": 5.62}, {"cause": "Basic Materials", "effect": "Real Estate", "lag": 4, "years": 4, "fmax": 3.17}, {"cause": "Communication Services", "effect": "Healthcare", "lag": 1, "years": 4, "fmax": 6.95}, {"cause": "Basic Materials", "effect": "Utilities", "lag": 1, "years": 4, "fmax": 4.13}, {"cause": "Energy", "effect": "Consumer Cyclical", "lag": 2, "years": 4, "fmax": 5.87}, {"cause": "Energy", "effect": "Technology", "lag": 1, "years": 3, "fmax": 4.24}, {"cause": "Real Estate", "effect": "Healthcare", "lag": 1, "years": 3, "fmax": 5.96}, {"cause": "Financial Services", "effect": "Technology", "lag": 1, "years": 3, "fmax": 6.96}, {"cause": "Real Estate", "effect": "Communication Services", "lag": 1, "years": 3, "fmax": 11.08}, {"cause": "Real Estate", "effect": "Utilities", "lag": 3, "years": 3, "fmax": 3.0}, {"cause": "Utilities", "effect": "Industrials", "lag": 11, "years": 3, "fmax": 4.57}, {"cause": "Utilities", "effect": "Real Estate", "lag": 4, "years": 3, "fmax": 4.21}, {"cause": "Technology", "effect": "Communication Services", "lag": 1, "years": 3, "fmax": 6.24}, {"cause": "Consumer Defensive", "effect": "Consumer Cyclical", "lag": 2, "years": 3, "fmax": 4.83}, {"cause": "Technology", "effect": "Energy", "lag": 3, "years": 3, "fmax": 4.67}, {"cause": "Basic Materials", "effect": "Healthcare", "lag": 6, "years": 3, "fmax": 4.28}, {"cause": "Communication Services", "effect": "Real Estate", "lag": 1, "years": 3, "fmax": 4.32}, {"cause": "Basic Materials", "effect": "Industrials", "lag": 2, "years": 3, "fmax": 5.34}], "comparison": [{"metric": "RS_pct", "weekly_sig5": 41, "weekly_sig8": 11, "weekly_f10": 8, "weekly_lag1": 61, "monthly_sig5": 17, "monthly_sig8": 6, "monthly_f10": 6, "monthly_lag1": 47}, {"metric": "RRS_pct", "weekly_sig5": 29, "weekly_sig8": 8, "weekly_f10": 9, "weekly_lag1": 48, "monthly_sig5": 34, "monthly_sig8": 7, "monthly_f10": 19, "monthly_lag1": 41}, {"metric": "BP_pct", "weekly_sig5": 54, "weekly_sig8": 14, "weekly_f10": 16, "weekly_lag1": 54, "monthly_sig5": 25, "monthly_sig8": 10, "monthly_f10": 9, "monthly_lag1": 48}]};
+const SECTORS = DATA.sectors;
+const SHORT = DATA.short;
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function fColor(f){
+  return f<5?"#90a4ae":f<8?"#f39c12":f<12?"#e74c3c":f<18?"#8e44ad":"#1a237e";
+}
+function lagColor(lag,maxLag){
+  const c=["#053061","#2166AC","#74ADD1","#ABD9E9","#FEE090","#FDAE61","#F46D43","#D73027","#A50026"];
+  const t=Math.min((lag-1)/(maxLag-1),1);
+  return c[Math.min(Math.floor(t*8),8)];
+}
+function arrowIdx(f){return f<5?0:f<8?1:f<12?2:f<18?3:4;}
+
+// ─── TAB SWITCH ─────────────────────────────────────────────────────────────
+function switchTab(mkey,freq,btn){
+  ['w','m'].forEach(f=>{
+    document.getElementById(mkey+'-'+f+'-pane').classList.remove('active');
+  });
+  document.getElementById(mkey+'-'+freq+'-pane').classList.add('active');
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNet(mkey,freq);
+}
+
+// ─── NETWORK ────────────────────────────────────────────────────────────────
+function renderNet(mkey,freq){
+  const linksKey = mkey+'_'+freq+'_links';
+  const allLinks  = DATA[mkey+'_'+freq+'_links3'] || DATA[linksKey];
+  const slider    = document.getElementById(mkey+'-'+freq+'-slider');
+  const minYears  = slider ? +slider.value : 5;
+  const showLag   = document.getElementById(mkey+'-'+freq+'-lag')?.checked ?? true;
+  const lagUnit   = freq==='w'?'週':'ヶ月';
+  const infoId    = mkey+'-'+freq+'-info';
+  const svgId     = mkey+'-'+freq+'-net';
+
+  const svg = d3.select("#"+svgId);
+  svg.selectAll("*").remove();
+  const W=540,H=500,cx=260,cy=245,R=195,nodeR=23;
+  svg.attr("width",W).attr("height",H);
+
+  const n=SECTORS.length, step=(2*Math.PI)/n;
+  const pos={};
+  SECTORS.forEach((s,i)=>{
+    const a=-Math.PI/2+i*step;
+    pos[s]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)};
+  });
+
+  const defs=svg.append("defs");
+  ["#90a4ae","#f39c12","#e74c3c","#8e44ad","#1a237e"].forEach((col,ci)=>{
+    defs.append("marker").attr("id",svgId+"-a"+ci)
+      .attr("viewBox","0 -5 10 10").attr("refX",10).attr("refY",0)
+      .attr("markerWidth",5).attr("markerHeight",5).attr("orient","auto")
+      .append("path").attr("d","M0,-5L10,0L0,5").attr("fill",col);
+  });
+
+  const filtered=allLinks.filter(l=>l.years>=minYears);
+
+  filtered.forEach(l=>{
+    const s=pos[l.source],t=pos[l.target];
+    if(!s||!t)return;
+    const dx=t.x-s.x,dy=t.y-s.y,dist=Math.sqrt(dx*dx+dy*dy);
+    const nx=-dy/dist,ny=dx/dist,bend=38;
+    const mx=(s.x+t.x)/2+nx*bend,my=(s.y+t.y)/2+ny*bend;
+    const col=fColor(l.fmax),ai=arrowIdx(l.fmax);
+    const w=Math.max(1,1+(l.years-minYears)*0.4);
+    const ex=t.x-(t.x-mx)/Math.sqrt((t.x-mx)**2+(t.y-my)**2)*(nodeR+2);
+    const ey=t.y-(t.y-my)/Math.sqrt((t.x-mx)**2+(t.y-my)**2)*(nodeR+2);
+
+    const g=svg.append("g").style("cursor","pointer");
+    g.append("path").attr("d",`M${s.x},${s.y} Q${mx},${my} ${ex},${ey}`)
+      .attr("fill","none").attr("stroke",col).attr("stroke-width",w)
+      .attr("opacity",.72).attr("marker-end",`url(#${svgId}-a${ai})`);
+
+    if(showLag){
+      const tx=(s.x+2*mx+ex)/4,ty=(s.y+2*my+ey)/4;
+      g.append("circle").attr("cx",tx).attr("cy",ty).attr("r",8)
+        .attr("fill","#fff").attr("stroke",col).attr("stroke-width",1.5).attr("opacity",.9);
+      g.append("text").attr("x",tx).attr("y",ty+3.5).attr("text-anchor","middle")
+        .attr("font-size",8).attr("font-weight","700").attr("fill",col).text(l.lag);
+    }
+    g.on("mouseover",function(ev){
+      d3.select(this).select("path").attr("opacity",1).attr("stroke-width",w+1.5);
+      document.getElementById(infoId).innerHTML=
+        `<div class="edge-title">${l.source} → ${l.target}</div>`+
+        `ラグ: <strong>${l.lag}${lagUnit}</strong> ／ 出現: <strong>${l.years}年</strong><br>`+
+        `平均F: ${l.fstat} ／ 最大F: <strong>${l.fmax}</strong>`;
+      const tt=document.getElementById("tt");
+      tt.innerHTML=`${SHORT[l.source]}→${SHORT[l.target]}<br>${l.lag}${lagUnit} / ${l.years}年`;
+      tt.style.opacity=1; tt.style.left=(ev.clientX+12)+"px"; tt.style.top=(ev.clientY-10)+"px";
+    }).on("mousemove",ev=>{
+      const tt=document.getElementById("tt");
+      tt.style.left=(ev.clientX+12)+"px"; tt.style.top=(ev.clientY-10)+"px";
+    }).on("mouseout",function(){
+      d3.select(this).select("path").attr("opacity",.72).attr("stroke-width",w);
+      document.getElementById("tt").style.opacity=0;
+    });
+  });
+
+  SECTORS.forEach(s=>{
+    const p=pos[s];
+    svg.append("circle").attr("cx",p.x).attr("cy",p.y).attr("r",nodeR)
+      .attr("fill","#fff").attr("stroke","#37474f").attr("stroke-width",1.8);
+    const words=SHORT[s].split(" ");
+    words.forEach((w,wi)=>{
+      svg.append("text").attr("x",p.x).attr("y",p.y+(wi-(words.length-1)/2)*10.5+1)
+        .attr("text-anchor","middle").attr("dominant-baseline","middle")
+        .attr("font-size",8.5).attr("font-weight","700").attr("fill","#263238").text(w);
+    });
+  });
+}
+
+// ─── HEATMAP ────────────────────────────────────────────────────────────────
+function renderHeatmap(tableId, matrixData, lagUnit, maxLag){
+  const map={};
+  matrixData.forEach(d=>{map[d.cause+"||"+d.effect]=d;});
+  let h="<thead><tr><th class='rl'>先行↓ / 遅行→</th>";
+  SECTORS.forEach(s=>{h+=`<th class='cl'>${SHORT[s]}</th>`;});
+  h+="</tr></thead><tbody>";
+  SECTORS.forEach(cause=>{
+    h+=`<tr><td class='rl'>${SHORT[cause]}</td>`;
+    SECTORS.forEach(effect=>{
+      if(cause===effect){h+="<td class='em'>—</td>";}
+      else{
+        const d=map[cause+"||"+effect];
+        if(d){const col=lagColor(d.lag,maxLag);h+=`<td style='background:${col};color:#fff' title='${cause}→${effect}: ${d.lag}${lagUnit}先行, ${d.years}年有意'>${d.lag}</td>`;}
+        else{h+="<td class='em'></td>";}
+      }
+    });
+    h+="</tr>";
+  });
+  h+="</tbody>";
+  document.getElementById(tableId).innerHTML=h;
+}
+
+// ─── PAIRS TABLE ────────────────────────────────────────────────────────────
+function renderPairs(tbodyId, links, minYears, lagUnit, maxLag){
+  const f=links.filter(l=>l.years>=minYears).sort((a,b)=>b.years-a.years||b.fmax-a.fmax);
+  let h="";
+  f.forEach((l,i)=>{
+    const fc=l.fmax>=10?"color:#c62828;font-weight:700":l.fmax>=6?"color:#e65100":""
+    h+=`<tr><td style='color:#90a4ae'>${i+1}</td><td><strong>${l.source}</strong></td>`+
+       `<td><strong>${l.target}</strong></td><td>${l.years}年</td>`+
+       `<td><span class='lag-b' style='background:${lagColor(l.lag,maxLag)}'>${l.lag}${lagUnit}</span></td>`+
+       `<td style='${fc}'>${l.fmax}</td></tr>`;
+  });
+  document.getElementById(tbodyId).innerHTML=h;
+}
+
+// ─── STATS ROW ───────────────────────────────────────────────────────────────
+function renderStats(id, links5, lagUnit){
+  const f10=links5.filter(l=>l.fmax>=10).length;
+  const sig8=links5.filter(l=>l.years>=8).length;
+  const lag1pct=links5.length>0?Math.round(links5.filter(l=>l.lag===1).length/links5.length*100):0;
+  document.getElementById(id).innerHTML=
+    `<div class='stat sb'><div class='val'>${links5.length}</div><div class='lbl'>有意ペア(≥5年)</div></div>`+
+    `<div class='stat sg'><div class='val'>${sig8}</div><div class='lbl'>高安定(≥8年)</div></div>`+
+    `<div class='stat so'><div class='val'>${f10}</div><div class='lbl'>F≥10</div></div>`+
+    `<div class='stat sp'><div class='val'>${lag1pct}%</div><div class='lbl'>lag=1${lagUnit}の割合</div></div>`;
+}
+
+// ─── INIT ALL ────────────────────────────────────────────────────────────────
+['rs','rrs','bp'].forEach(mkey=>{
+  // Weekly
+  const wl5 = DATA[mkey+'_w_links'];
+  renderStats(mkey+'-w-stats', wl5, '週');
+  renderNet(mkey,'w');
+  renderHeatmap(mkey+'-w-hm', DATA[mkey+'_w_matrix'],'週',16);
+  renderPairs(mkey+'-w-tbody', wl5, 5,'週',16);
+  // Monthly
+  const ml5 = DATA[mkey+'_m_links'];
+  renderStats(mkey+'-m-stats', ml5,'ヶ月');
+  renderHeatmap(mkey+'-m-hm', DATA[mkey+'_m_matrix'],'ヶ月',12);
+  renderPairs(mkey+'-m-tbody', ml5, 5,'ヶ月',12);
+});
+</script>
+</body>
+</html>
